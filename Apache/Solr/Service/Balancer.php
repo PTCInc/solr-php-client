@@ -1,41 +1,43 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc. 
- * All rights reserved. 
- * 
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met: 
- * 
- *  - Redistributions of source code must retain the above copyright notice, 
- *    this list of conditions and the following disclaimer. 
- *  - Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in the 
- *    documentation and/or other materials provided with the distribution. 
- *  - Neither the name of Conduit Internet Technologies, Inc. nor the names of 
- *    its contributors may be used to endorse or promote products derived from 
- *    this software without specific prior written permission. 
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  - Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  - Neither the name of Conduit Internet Technologies, Inc. nor the names of
+ *    its contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
- * 
+ *
  * @package Apache
  * @subpackage Solr
  * @author Donovan Jimenez <djimenez@conduit-it.com>, Dan Wolfe
  */
 
-require_once('Apache/Solr/Service.php');
+// See Issue #1 (http://code.google.com/p/solr-php-client/issues/detail?id=1)
+// Doesn't follow typical include path conventions, but is more convenient for users
+require_once(dirname(dirname(__FILE__)) . '/Service.php');
 
 /**
  * Reference Implementation for using multiple Solr services in a distribution. Functionality
@@ -55,7 +57,7 @@ class Apache_Solr_Service_Balancer
 
 	protected $_readPingTimeout = 2;
 	protected $_writePingTimeout = 4;
-	
+
 	// Configuration for server selection backoff intervals
 	protected $_useBackoff = false;		// Set to true to use more resillient write server selection
 	protected $_backoffLimit = 600;		// 10 minute default maximum
@@ -127,7 +129,7 @@ class Apache_Solr_Service_Balancer
 	{
 		$this->_writePingTimeout = $timeout;
 	}
-	
+
 	public function setUseBackoff($enable)
 	{
 		$this->_useBackoff = $enable;
@@ -302,22 +304,22 @@ class Apache_Solr_Service_Balancer
 					$this->removeReadService($this->_currentReadService);
 				}
 			}
-			
+
 			if (count($this->_readableServices))
 			{
 				// select one of the read services at random
 				$ids = array_keys($this->_readableServices);
-				
+
 				$id = $ids[rand(0, count($ids) - 1)];
 				$service = $this->_readableServices[$id];
-			
+
 				if (is_array($service))
 				{
 					//convert the array definition to a client object
 					$service = new Apache_Solr_Service($service['host'], $service['port'], $service['path']);
 					$this->_readableServices[$id] = $service;
 				}
-				
+
 				$service->setCreateDocuments($this->_createDocuments);
 				$this->_currentReadService = $id;
 			}
@@ -343,8 +345,8 @@ class Apache_Solr_Service_Balancer
 		if($this->_useBackoff)
 		{
 			return $this->_selectWriteServiceSafe($forceSelect);
-		}		
-		
+		}
+
 		if (!$this->_currentWriteService || !isset($this->_writeableServices[$this->_currentWriteService]) || $forceSelect)
 		{
 			if ($this->_currentWriteService && isset($this->_writeableServices[$this->_currentWriteService]) && $forceSelect)
@@ -355,15 +357,15 @@ class Apache_Solr_Service_Balancer
 					$this->removeWriteService($this->_currentWriteService);
 				}
 			}
-			
+
 			if (count($this->_writeableServices))
 			{
 				// select one of the read services at random
 				$ids = array_keys($this->_writeableServices);
-				
+
 				$id = $ids[rand(0, count($ids) - 1)];
 				$service = $this->_writeableServices[$id];
-			
+
 				if (is_array($service))
 				{
 					//convert the array definition to a client object
@@ -381,50 +383,50 @@ class Apache_Solr_Service_Balancer
 
 		return $this->_writeableServices[$this->_currentWriteService];
 	}
-	
+
 	/**
 	 * Iterate through available write services and select the first with a ping
-	 * that satisfies configured timeout restrictions (or the default).  The 
-	 * timeout period will increase until a connection is made or the limit is 
-	 * reached.   This will allow for increased reliability with heavily loaded 
+	 * that satisfies configured timeout restrictions (or the default).  The
+	 * timeout period will increase until a connection is made or the limit is
+	 * reached.   This will allow for increased reliability with heavily loaded
 	 * server(s).
 	 *
 	 * @return Apache_Solr_Service
 	 *
 	 * @throws Exception If there are no write services that meet requirements
-	 */	
-	
+	 */
+
 	protected function _selectWriteServiceSafe($forceSelect = false)
-	{		
+	{
 		if (!$this->_currentWriteService || !isset($this->_writeableServices[$this->_currentWriteService]) || $forceSelect)
 		{
 			if (count($this->_writeableServices))
 			{
 				$backoff = $this->_defaultBackoff;
-				
+
 				do {
 					// select one of the read services at random
 					$ids = array_keys($this->_writeableServices);
-					
+
 					$id = $ids[rand(0, count($ids) - 1)];
 					$service = $this->_writeableServices[$id];
-				
+
 					if (is_array($service))
 					{
 						//convert the array definition to a client object
 						$service = new Apache_Solr_Service($service['host'], $service['port'], $service['path']);
 						$this->_writeableServices[$id] = $service;
 					}
-	
+
 					$this->_currentWriteService = $id;
-										
+
 					$backoff *= $this->_backoffEscalation;
-					
+
 					if($backoff > $this->_backoffLimit)
 					{
 						throw new Exception('No write services were available.  All timeouts exceeded.');
 					}
-					
+
 				} while($this->_writeableServices[$this->_currentWriteService]->ping($backoff) === false);
 			}
 			else
@@ -481,7 +483,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -516,7 +518,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -551,7 +553,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -585,7 +587,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -618,7 +620,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -652,7 +654,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -686,7 +688,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -720,7 +722,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectWriteService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 
@@ -755,7 +757,7 @@ class Apache_Solr_Service_Balancer
 
 			$service = $this->_selectReadService(true);
 		} while ($service);
-		
+
 		return false;
 	}
 }
