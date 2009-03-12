@@ -148,7 +148,7 @@ class Apache_Solr_Service
 	 *
 	 * @var string
 	 */
-	protected $_updateUrl, $_searchUrl, $_threadsUrl;
+	protected $_pingUrl, $_updateUrl, $_searchUrl, $_threadsUrl;
 
 	/**
 	 * Keep track of whether our URLs have been constructed
@@ -156,13 +156,6 @@ class Apache_Solr_Service
 	 * @var boolean
 	 */
 	protected $_urlsInited = false;
-
-	/**
-	 * Stream context for posting
-	 *
-	 * @var resource
-	 */
-	protected $_postContext;
 
 	/**
 	 * Escape a value for special query characters such as ':', '(', ')', '*', '?', etc.
@@ -221,16 +214,6 @@ class Apache_Solr_Service
 		$this->setPath($path);
 
 		$this->_initUrls();
-
-		//set up the stream context for posting with file_get_contents
-		$contextOpts = array(
-			'http' => array(
-				'method' => 'POST',
-				'header' => "Content-Type: text/xml; charset=UTF-8\r\n" //php.net example showed \r\n at the end
-			)
-		);
-
-		$this->_postContext = stream_context_create($contextOpts);
 	}
 
 	/**
@@ -267,6 +250,7 @@ class Apache_Solr_Service
 	protected function _initUrls()
 	{
 		//Initialize our full servlet URLs now that we have server information
+		$this->_pingUrl = $this->_constructUrl(self::PING_SERVLET);
 		$this->_updateUrl = $this->_constructUrl(self::UPDATE_SERVLET, array('wt' => self::SOLR_WRITER ));
 		$this->_searchUrl = $this->_constructUrl(self::SEARCH_SERVLET);
 		$this->_threadsUrl = $this->_constructUrl(self::THREADS_SERVLET, array('wt' => self::SOLR_WRITER ));
@@ -281,13 +265,27 @@ class Apache_Solr_Service
 	 * @param float $timeout Read timeout in seconds
 	 * @return Apache_Solr_Response
 	 *
-	 * @todo implement timeout ability
 	 * @throws Exception If a non 200 response status is returned
 	 */
 	protected function _sendRawGet($url, $timeout = FALSE)
 	{
+		//set up the stream context so we can control
+		// the timeout for file_get_contents
+		$context = stream_context_create();
+		
+		// set the timeout if specified, without this I assume
+		// that the default_socket_timeout ini setting is used
+		if ($timeout !== FALSE && $timeout > 0.0)
+		{
+			// timeouts with file_get_contents seem to need
+			// to be halved to work as expected
+			$timeout = (float) $timeout / 2;
+			
+			stream_context_set_option($context, 'http', 'timeout', $timeout);
+		}
+
 		//$http_response_header is set by file_get_contents
-		$response = new Apache_Solr_Response(@file_get_contents($url), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
+		$response = new Apache_Solr_Response(@file_get_contents($url, false, $context), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
 		if ($response->getHttpStatus() != 200)
 		{
@@ -310,20 +308,35 @@ class Apache_Solr_Service
 	 */
 	protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8')
 	{
-		//ensure content type is correct
-		stream_context_set_option($this->_postContext, 'http', 'header', 'Content-Type: ' . $contentType);
-
-		//set the read timeout if specified
-		if ($timeout !== FALSE)
+		//set up the stream context for posting with file_get_contents
+		$context = stream_context_create(
+			array(
+				'http' => array(
+					// set HTTP method
+					'method' => 'POST',
+					
+					// Add our posted content type
+					'header' => "Content-Type: $contentType",
+					
+					// the posted content
+					'content' => $rawPost
+				)
+			)
+		);
+		
+		// set the timeout if specified, without this I assume
+		// that the default_socket_timeout ini setting is used
+		if ($timeout !== FALSE && $timeout > 0.0)
 		{
-			stream_context_set_option($this->_postContext, 'http', 'timeout', $timeout);
+			// timeouts with file_get_contents seem to need
+			// to be halved to work as expected
+			$timeout = (float) $timeout / 2;
+			
+			stream_context_set_option($context, 'http', 'timeout', $timeout);
 		}
 
-		//set the content
-		stream_context_set_option($this->_postContext, 'http', 'content', $rawPost);
-
 		//$http_response_header is set by file_get_contents
-		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_postContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
+		$response = new Apache_Solr_Response(@file_get_contents($url, false, $context), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
 		if ($response->getHttpStatus() != 200)
 		{
@@ -531,108 +544,43 @@ class Apache_Solr_Service
 	 * server is able to be made.
 	 *
 	 * @param float $timeout maximum time to wait for ping in seconds, -1 for unlimited (default is 2)
-	 * @return float Actual time taken to ping the server, FALSE if timeout occurs
+	 * @return float Actual time taken to ping the server, FALSE if timeout or HTTP error status occurs
 	 */
 	public function ping($timeout = 2)
 	{
-		$timeout = (float) $timeout;
+		$start = microtime(true);
+		
+		// when using timeout in context and file_get_contents
+		// it seems to take twice the timout value
+		$timeout = (float) $timeout / 2;
 
-		if ($timeout <= 0)
+		if ($timeout <= 0.0)
 		{
 			$timeout = -1;
 		}
-
-		$start = microtime(true);
-
-		//to prevent strict errors
-		$errno = 0;
-		$errstr = '';
-
-		//try to connect to the host with timeout
-		$fp = fsockopen($this->_host, $this->_port, $errno, $errstr, $timeout);
-
-		if ($fp)
+		
+		$context = stream_context_create(
+			array(
+				'http' => array(
+					'method' => 'HEAD',
+					'timeout' => $timeout
+				)
+			)
+		);
+		
+		// attempt a HEAD request to the solr ping page
+		$ping = @file_get_contents($this->_pingUrl, false, $context);
+		
+		// result is false if there was a timeout
+		// or if the HTTP status was not 200
+		if ($ping !== false)
 		{
-			//If we have a timeout set, then determine the amount of time we have left
-			//in the request and set the stream timeout for the write operation
-			if ($timeout > 0)
-			{
-				//do the calculation
-				$writeTimeout = $timeout - (microtime(true) - $start);
-
-				//check if we're out of time
-				if ($writeTimeout <= 0)
-				{
-					fclose($fp);
-					return false;
-				}
-
-				//convert to microseconds and set the stream timeout
-				$writeTimeoutInMicroseconds = (int) $writeTimeout * 1000000;
-				stream_set_timeout($fp, 0, $writeTimeoutInMicroseconds);
-			}
-
-			$request = 	'HEAD ' . $this->_path . self::PING_SERVLET . ' HTTP/1.1' . "\r\n" .
-						'host: ' . $this->_host . "\r\n" .
-						'Connection: close' . "\r\n" .
-						"\r\n";
-
-			fwrite($fp, $request);
-
-			//check the stream meta data to see if we timed out during the operation
-			$metaData = stream_get_meta_data($fp);
-
-			if (isset($metaData['timeout']) && $metaData['timeout'])
-			{
-				fclose($fp);
-				return false;
-			}
-
-
-			//if we have a timeout set and have made it this far, determine the amount of time
-			//still remaining and set the timeout appropriately before the read operation
-			if ($timeout > 0)
-			{
-				//do the calculation
-				$readTimeout = $timeout - (microtime(true) - $start);
-
-				//check if we've run out of time
-				if ($readTimeout <= 0)
-				{
-					fclose($fp);
-					return false;
-				}
-
-				//convert to microseconds and set the stream timeout
-				$readTimeoutInMicroseconds = $readTimeout * 1000000;
-				stream_set_timeout($fp, 0, $readTimeoutInMicroseconds);
-			}
-
-			//at the very least we should get a response header line of
-			//HTTP/1.1 200 OK
-			$response = fread($fp, 15);
-
-			//check the stream meta data to see if we timed out during the operation
-			$metaData = stream_get_meta_data($fp);
-			fclose($fp); //we're done with the connection - ignore the rest
-
-			if (isset($metaData['timeout']) && $metaData['timeout'])
-			{
-				return false;
-			}
-
-			//finally, check the response header line
-			if ($response != 'HTTP/1.1 200 OK')
-			{
-				return false;
-			}
-
-			//we made it, return the approximate ping time
 			return microtime(true) - $start;
 		}
-
-		//we weren't able to make a connection
-		return false;
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
