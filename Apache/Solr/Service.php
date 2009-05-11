@@ -97,6 +97,12 @@ class Apache_Solr_Service
 	const NAMED_LIST_MAP = 'map';
 
 	/**
+	 * Search HTTP Methods
+	 */
+	const METHOD_GET = 'GET';
+	const METHOD_POST = 'POST';
+
+	/**
 	 * Servlet mappings
 	 */
 	const PING_SERVLET = 'admin/ping';
@@ -272,7 +278,7 @@ class Apache_Solr_Service
 		//set up the stream context so we can control
 		// the timeout for file_get_contents
 		$context = stream_context_create();
-		
+
 		// set the timeout if specified, without this I assume
 		// that the default_socket_timeout ini setting is used
 		if ($timeout !== FALSE && $timeout > 0.0)
@@ -280,7 +286,7 @@ class Apache_Solr_Service
 			// timeouts with file_get_contents seem to need
 			// to be halved to work as expected
 			$timeout = (float) $timeout / 2;
-			
+
 			stream_context_set_option($context, 'http', 'timeout', $timeout);
 		}
 
@@ -314,16 +320,16 @@ class Apache_Solr_Service
 				'http' => array(
 					// set HTTP method
 					'method' => 'POST',
-					
+
 					// Add our posted content type
 					'header' => "Content-Type: $contentType",
-					
+
 					// the posted content
 					'content' => $rawPost
 				)
 			)
 		);
-		
+
 		// set the timeout if specified, without this I assume
 		// that the default_socket_timeout ini setting is used
 		if ($timeout !== FALSE && $timeout > 0.0)
@@ -331,7 +337,7 @@ class Apache_Solr_Service
 			// timeouts with file_get_contents seem to need
 			// to be halved to work as expected
 			$timeout = (float) $timeout / 2;
-			
+
 			stream_context_set_option($context, 'http', 'timeout', $timeout);
 		}
 
@@ -549,7 +555,7 @@ class Apache_Solr_Service
 	public function ping($timeout = 2)
 	{
 		$start = microtime(true);
-		
+
 		// when using timeout in context and file_get_contents
 		// it seems to take twice the timout value
 		$timeout = (float) $timeout / 2;
@@ -558,7 +564,7 @@ class Apache_Solr_Service
 		{
 			$timeout = -1;
 		}
-		
+
 		$context = stream_context_create(
 			array(
 				'http' => array(
@@ -567,10 +573,10 @@ class Apache_Solr_Service
 				)
 			)
 		);
-		
+
 		// attempt a HEAD request to the solr ping page
 		$ping = @file_get_contents($this->_pingUrl, false, $context);
-		
+
 		// result is false if there was a timeout
 		// or if the HTTP status was not 200
 		if ($ping !== false)
@@ -840,7 +846,7 @@ class Apache_Solr_Service
 	 *
 	 * @throws Exception If an error occurs during the service call
 	 */
-	public function search($query, $offset = 0, $limit = 10, $params = array())
+	public function search($query, $offset = 0, $limit = 10, $params = array(), $method = self::METHOD_GET)
 	{
 		if (!is_array($params))
 		{
@@ -869,6 +875,17 @@ class Apache_Solr_Service
 		// anywhere else the regex isn't expecting it
 		$queryString = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $queryString);
 
-		return $this->_sendRawGet($this->_searchUrl . $this->_queryDelimiter . $queryString);
+		if ($method == self::METHOD_GET)
+		{
+			return $this->_sendRawGet($this->_searchUrl . $this->_queryDelimiter . $queryString);
+		}
+		else if ($method == self::METHOD_POST)
+		{
+			return $this->_sendRawPost($this->_searchUrl, $queryString, FALSE, 'application/x-www-form-urlencoded');
+		}
+		else
+		{
+			throw new Exception("Unsupported method '$method', please use the Apache_Solr_Service::METHOD_* constants");
+		}
 	}
 }
