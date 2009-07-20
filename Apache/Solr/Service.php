@@ -759,13 +759,14 @@ class Apache_Solr_Service
 	 * a complete and well formed "delete" xml document
 	 *
 	 * @param string $rawPost Expected to be utf-8 encoded xml document
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Exception If an error occurs during the service call
 	 */
-	public function delete($rawPost)
+	public function delete($rawPost, $timeout = 3600)
 	{
-		return $this->_sendRawPost($this->_updateUrl, $rawPost);
+		return $this->_sendRawPost($this->_updateUrl, $rawPost, $timeout);
 	}
 
 	/**
@@ -774,11 +775,12 @@ class Apache_Solr_Service
 	 * @param string $id Expected to be utf-8 encoded
 	 * @param boolean $fromPending
 	 * @param boolean $fromCommitted
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Exception If an error occurs during the service call
 	 */
-	public function deleteById($id, $fromPending = true, $fromCommitted = true)
+	public function deleteById($id, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
 		$pendingValue = $fromPending ? 'true' : 'false';
 		$committedValue = $fromCommitted ? 'true' : 'false';
@@ -788,7 +790,7 @@ class Apache_Solr_Service
 
 		$rawPost = '<delete fromPending="' . $pendingValue . '" fromCommitted="' . $committedValue . '"><id>' . $id . '</id></delete>';
 
-		return $this->delete($rawPost);
+		return $this->delete($rawPost, $timeout);
 	}
 
 	/**
@@ -797,11 +799,12 @@ class Apache_Solr_Service
 	 * @param string $rawQuery Expected to be utf-8 encoded
 	 * @param boolean $fromPending
 	 * @param boolean $fromCommitted
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Exception If an error occurs during the service call
 	 */
-	public function deleteByQuery($rawQuery, $fromPending = true, $fromCommitted = true)
+	public function deleteByQuery($rawQuery, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
 		$pendingValue = $fromPending ? 'true' : 'false';
 		$committedValue = $fromCommitted ? 'true' : 'false';
@@ -811,7 +814,7 @@ class Apache_Solr_Service
 
 		$rawPost = '<delete fromPending="' . $pendingValue . '" fromCommitted="' . $committedValue . '"><query>' . $rawQuery . '</query></delete>';
 
-		return $this->delete($rawPost);
+		return $this->delete($rawPost, $timeout);
 	}
 
 	/**
