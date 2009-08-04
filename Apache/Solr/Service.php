@@ -29,6 +29,7 @@
  *
  * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
+ * @version $Id$
  *
  * @package Apache
  * @subpackage Solr
@@ -78,6 +79,16 @@ require_once(dirname(__FILE__) . '/Response.php');
  */
 class Apache_Solr_Service
 {
+	/**
+	 * SVN Revision meta data for this class
+	 */
+	const SVN_REVISION = '$Revision$';
+
+	/**
+	 * SVN ID meta data for this class
+	 */
+	const SVN_ID = '$Id$';
+
 	/**
 	 * Response version we support
 	 */
