@@ -729,7 +729,21 @@ class Apache_Solr_Service
 
 		$xml .= '</doc>';
 
-		return $xml;
+		// replace any control characters to avoid Solr XML parser exception
+		return $this->_stripCtrlChars($xml);
+	}
+
+	/**
+	 * Replace control (non-printable) characters from string that are invalid to Solr's XML parser with a space.
+	 *
+	 * @param string $string
+	 * @return string
+	 */
+	protected function _stripCtrlChars($string)
+	{
+		// See:  http://w3.org/International/questions/qa-forms-utf-8.html
+		// Printable utf-8 does not include any of these chars below x7F
+		return preg_replace('@[\x00-\x08\x0B\x0C\x0E-\x1F]@', ' ', $string);
 	}
 
 	/**
