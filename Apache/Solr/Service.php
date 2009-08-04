@@ -95,9 +95,7 @@ class Apache_Solr_Service
 	const SOLR_VERSION = '1.2';
 
 	/**
-	 * Response writer we support
-	 *
-	 * @todo Solr 1.3 release may change this to SerializedPHP or PHP implementation
+	 * Response writer we'll request - JSON. See http://code.google.com/p/solr-php-client/issues/detail?id=6#c1 for reasoning
 	 */
 	const SOLR_WRITER = 'json';
 

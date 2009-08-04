@@ -42,8 +42,6 @@
  *
  * Currently requires json_decode which is bundled with PHP >= 5.2.0, Alternatively can be
  * installed with PECL.  Zend Framework also includes a purely PHP solution.
- *
- * @todo When Solr 1.3 is released, possibly convert to use PHP or Serialized PHP output writer
  */
 class Apache_Solr_Response
 {
