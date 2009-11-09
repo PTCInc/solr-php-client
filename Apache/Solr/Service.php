@@ -350,7 +350,7 @@ class Apache_Solr_Service
 	 */
 	protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8')
 	{
-		stream_context_set_params($this->_postContext, array(
+		stream_context_set_option($this->_postContext, array(
 				'http' => array(
 					// set HTTP method
 					'method' => 'POST',
