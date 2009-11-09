@@ -173,6 +173,20 @@ class Apache_Solr_Service
 	protected $_urlsInited = false;
 
 	/**
+	 * Reusable stream context resources for GET and POST operations
+	 *
+	 * @var resource
+	 */
+	protected $_getContext, $_postContext;
+
+	/**
+	 * Default HTTP timeout when one is not specified (initialized to default_socket_timeout ini setting)
+	 *
+	 * var float
+	 */
+	protected $_defaultTimeout;
+
+	/**
 	 * Escape a value for special query characters such as ':', '(', ')', '*', '?', etc.
 	 *
 	 * NOTE: inside a phrase fewer characters need escaped, use {@link Apache_Solr_Service::escapePhrase()} instead
@@ -229,6 +243,19 @@ class Apache_Solr_Service
 		$this->setPath($path);
 
 		$this->_initUrls();
+
+		// create our shared get and post stream contexts
+		$this->_getContext = stream_context_create();
+		$this->_postContext = stream_context_create();
+
+		// determine our default http timeout from ini settings
+		$this->_defaultTimeout = (int) ini_get('default_socket_timeout');
+
+		// double check we didn't get 0 for a timeout
+		if ($this->_defaultTimeout <= 0)
+		{
+			$this->_defaultTimeout = 60;
+		}
 	}
 
 	/**
@@ -284,23 +311,23 @@ class Apache_Solr_Service
 	 */
 	protected function _sendRawGet($url, $timeout = FALSE)
 	{
-		//set up the stream context so we can control
-		// the timeout for file_get_contents
-		$context = stream_context_create();
-
-		// set the timeout if specified, without this I assume
-		// that the default_socket_timeout ini setting is used
+		// set the timeout if specified
 		if ($timeout !== FALSE && $timeout > 0.0)
 		{
 			// timeouts with file_get_contents seem to need
 			// to be halved to work as expected
 			$timeout = (float) $timeout / 2;
 
-			stream_context_set_option($context, 'http', 'timeout', $timeout);
+			stream_context_set_option($this->_getContext, 'http', 'timeout', $timeout);
+		}
+		else
+		{
+			// use the default timeout pulled from default_socket_timeout otherwise
+			stream_context_set_option($this->_getContext, 'http', 'timeout', $this->_defaultTimeout);
 		}
 
 		//$http_response_header is set by file_get_contents
-		$response = new Apache_Solr_Response(@file_get_contents($url, false, $context), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
+		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_getContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
 		if ($response->getHttpStatus() != 200)
 		{
@@ -323,9 +350,7 @@ class Apache_Solr_Service
 	 */
 	protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8')
 	{
-		//set up the stream context for posting with file_get_contents
-		$context = stream_context_create(
-			array(
+		stream_context_set_params($this->_postContext, array(
 				'http' => array(
 					// set HTTP method
 					'method' => 'POST',
@@ -334,24 +359,26 @@ class Apache_Solr_Service
 					'header' => "Content-Type: $contentType",
 
 					// the posted content
-					'content' => $rawPost
+					'content' => $rawPost,
+
+					// default timeout
+					'timeout' => $this->_defaultTimeout
 				)
 			)
 		);
 
-		// set the timeout if specified, without this I assume
-		// that the default_socket_timeout ini setting is used
+		// set the timeout if specified
 		if ($timeout !== FALSE && $timeout > 0.0)
 		{
 			// timeouts with file_get_contents seem to need
 			// to be halved to work as expected
 			$timeout = (float) $timeout / 2;
 
-			stream_context_set_option($context, 'http', 'timeout', $timeout);
+			stream_context_set_option($this->_postContext, 'http', 'timeout', $timeout);
 		}
 
 		//$http_response_header is set by file_get_contents
-		$response = new Apache_Solr_Response(@file_get_contents($url, false, $context), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
+		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_postContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
 		if ($response->getHttpStatus() != 200)
 		{
