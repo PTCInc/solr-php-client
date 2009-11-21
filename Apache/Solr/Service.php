@@ -90,11 +90,6 @@ class Apache_Solr_Service
 	const SVN_ID = '$Id$';
 
 	/**
-	 * Response version we support
-	 */
-	const SOLR_VERSION = '1.2';
-
-	/**
 	 * Response writer we'll request - JSON. See http://code.google.com/p/solr-php-client/issues/detail?id=6#c1 for reasoning
 	 */
 	const SOLR_WRITER = 'json';
@@ -941,8 +936,6 @@ class Apache_Solr_Service
 		}
 
 		// construct our full parameters
-		// sending the version is important in case the format changes
-		$params['version'] = self::SOLR_VERSION;
 
 		// common parameters in this interface
 		$params['wt'] = self::SOLR_WRITER;
