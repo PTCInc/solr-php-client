@@ -156,7 +156,7 @@ class Apache_Solr_Service
 	 *
 	 * @var string
 	 */
-	protected $_queryDelimiter = '?', $_queryStringDelimiter = '&';
+	protected $_queryDelimiter = '?', $_queryStringDelimiter = '&', $_queryBracketsEscaped = true;
 
 	/**
 	 * Constructed servlet full path URLs
@@ -256,6 +256,9 @@ class Apache_Solr_Service
 		{
 			$this->_defaultTimeout = 60;
 		}
+
+		// check that our php version is >= 5.1.3 so we can correct for http_build_query behavior later
+		$this->_queryBracketsEscaped = version_compare(phpversion(), '5.1.3', '>=');
 	}
 
 	/**
@@ -951,13 +954,25 @@ class Apache_Solr_Service
 
 		// use http_build_query to encode our arguments because its faster
 		// than urlencoding all the parts ourselves in a loop
-		$queryString = http_build_query($params, null, $this->_queryStringDelimiter);
-
+		//
 		// because http_build_query treats arrays differently than we want to, correct the query
 		// string by changing foo[#]=bar (# being an actual number) parameter strings to just
 		// multiple foo=bar strings. This regex should always work since '=' will be urlencoded
 		// anywhere else the regex isn't expecting it
-		$queryString = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $queryString);
+		//
+		// NOTE: before php 5.1.3 brackets were not url encoded by http_build query - we've checked
+		// the php version in the constructor and put the results in the instance variable. Also, before
+		// 5.1.2 the arg_separator parameter was not available, so don't use it
+		if ($this->_queryBracketsEscaped)
+		{
+			$queryString = http_build_query($params, null, $this->_queryStringDelimiter);
+			$queryString = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $queryString);
+		}
+		else
+		{
+			$queryString = http_build_query($params);
+			$queryString = preg_replace('/\\[(?:[0-9]|[1-9][0-9]+)\\]=/', '=', $queryString);
+		}
 
 		if ($method == self::METHOD_GET)
 		{
