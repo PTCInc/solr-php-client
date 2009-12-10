@@ -529,7 +529,7 @@ class Apache_Solr_Service
 	 * @param string $namedListTreatment
 	 * @throws Exception If invalid option is set
 	 */
-	public function setNamedListTreatmet($namedListTreatment)
+	public function setNamedListTreatment($namedListTreatment)
 	{
 		switch ((string) $namedListTreatment)
 		{
