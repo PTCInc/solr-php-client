@@ -247,6 +247,12 @@ class Apache_Solr_Response
 		//An alternative would be to use Zend_Json::decode(...)
 		$data = json_decode($this->_rawResponse);
 
+		// check that we receive a valid JSON response - we should never receive a null
+		if ($data === null)
+		{
+			throw new Exception('Solr response does not appear to be valid JSON, please examine the raw response with getRawResposne() method');
+		}
+
 		//if we're configured to collapse single valued arrays or to convert them to Apache_Solr_Document objects
 		//and we have response documents, then try to collapse the values and / or convert them now
 		if (($this->_createDocuments || $this->_collapseSingleValueArrays) && isset($data->response) && is_array($data->response->docs))
