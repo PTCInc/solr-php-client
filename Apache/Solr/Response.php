@@ -220,8 +220,8 @@ class Apache_Solr_Response
 	/**
 	 * Magic get to expose the parsed data and to lazily load it
 	 *
-	 * @param unknown_type $key
-	 * @return unknown
+	 * @param string $key
+	 * @return mixed
 	 */
 	public function __get($key)
 	{
@@ -240,8 +240,25 @@ class Apache_Solr_Response
 	}
 
 	/**
+	 * Magic function for isset function on parsed data
+	 *
+	 * @param string $key
+	 * @return boolean
+	 */
+	public function __isset($key)
+	{
+		if (!$this->_isParsed)
+		{
+			$this->_parseData();
+			$this->_isParsed = true;
+		}
+
+		return isset($this->_parsedData->$key);
+	}
+
+	/**
 	 * Parse the raw response into the parsed_data array for access
-	 * 
+	 *
 	 * @throws Apache_Solr_ParserException If the data could not be parsed
 	 */
 	protected function _parseData()
