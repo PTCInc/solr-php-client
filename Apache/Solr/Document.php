@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  * @version $Id$
  *

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  * @version $Id$
  *
@@ -165,7 +165,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @param mixed $service
 	 *
-	 * @throws Exception If service descriptor is not valid
+	 * @throws Apache_Solr_InvalidArgumentException If service descriptor is not valid
 	 */
 	public function addReadService($service)
 	{
@@ -185,7 +185,7 @@ class Apache_Solr_Service_Balancer
 			}
 			else
 			{
-				throw new Exception('A Readable Service description array does not have all required elements of host, port, and path');
+				throw new Apache_Solr_InvalidArgumentException('A Readable Service description array does not have all required elements of host, port, and path');
 			}
 		}
 	}
@@ -195,7 +195,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @param mixed $service
 	 *
-	 * @throws Exception If service descriptor is not valid
+	 * @throws Apache_Solr_InvalidArgumentException If service descriptor is not valid
 	 */
 	public function removeReadService($service)
 	{
@@ -213,7 +213,7 @@ class Apache_Solr_Service_Balancer
 			}
 			else
 			{
-				throw new Exception('A Readable Service description array does not have all required elements of host, port, and path');
+				throw new Apache_Solr_InvalidArgumentException('A Readable Service description array does not have all required elements of host, port, and path');
 			}
 		}
 		else if (is_string($service))
@@ -233,7 +233,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @param mixed $service
 	 *
-	 * @throws Exception If service descriptor is not valid
+	 * @throws Apache_Solr_InvalidArgumentException If service descriptor is not valid
 	 */
 	public function addWriteService($service)
 	{
@@ -253,7 +253,7 @@ class Apache_Solr_Service_Balancer
 			}
 			else
 			{
-				throw new Exception('A Writeable Service description array does not have all required elements of host, port, and path');
+				throw new Apache_Solr_InvalidArgumentException('A Writeable Service description array does not have all required elements of host, port, and path');
 			}
 		}
 	}
@@ -263,7 +263,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @param mixed $service
 	 *
-	 * @throws Exception If service descriptor is not valid
+	 * @throws Apache_Solr_InvalidArgumentException If service descriptor is not valid
 	 */
 	public function removeWriteService($service)
 	{
@@ -281,7 +281,7 @@ class Apache_Solr_Service_Balancer
 			}
 			else
 			{
-				throw new Exception('A Readable Service description array does not have all required elements of host, port, and path');
+				throw new Apache_Solr_InvalidArgumentException('A Readable Service description array does not have all required elements of host, port, and path');
 			}
 		}
 		else if (is_string($service))
@@ -301,7 +301,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @return Apache_Solr_Service
 	 *
-	 * @throws Exception If there are no read services that meet requirements
+	 * @throws Apache_Solr_NoServiceAvailableException If there are no read services that meet requirements
 	 */
 	protected function _selectReadService($forceSelect = false)
 	{
@@ -336,7 +336,7 @@ class Apache_Solr_Service_Balancer
 			}
 			else
 			{
-				throw new Exception('No read services were available');
+				throw new Apache_Solr_NoServiceAvailableException('No read services were available');
 			}
 		}
 
@@ -349,7 +349,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @return Apache_Solr_Service
 	 *
-	 * @throws Exception If there are no write services that meet requirements
+	 * @throws Apache_Solr_NoServiceAvailableException If there are no write services that meet requirements
 	 */
 	protected function _selectWriteService($forceSelect = false)
 	{
@@ -388,7 +388,7 @@ class Apache_Solr_Service_Balancer
 			}
 			else
 			{
-				throw new Exception('No write services were available');
+				throw new Apache_Solr_NoServiceAvailableException('No write services were available');
 			}
 		}
 
@@ -404,7 +404,7 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @return Apache_Solr_Service
 	 *
-	 * @throws Exception If there are no write services that meet requirements
+	 * @throws Apache_Solr_NoServiceAvailableException If there are no write services that meet requirements
 	 */
 
 	protected function _selectWriteServiceSafe($forceSelect = false)
@@ -435,14 +435,14 @@ class Apache_Solr_Service_Balancer
 
 					if($backoff > $this->_backoffLimit)
 					{
-						throw new Exception('No write services were available.  All timeouts exceeded.');
+						throw new Apache_Solr_NoServiceAvailableException('No write services were available.  All timeouts exceeded.');
 					}
 
 				} while($this->_writeableServices[$this->_currentWriteService]->ping($backoff) === false);
 			}
 			else
 			{
-				throw new Exception('No write services were available');
+				throw new Apache_Solr_NoServiceAvailableException('No write services were available');
 			}
 		}
 
@@ -472,7 +472,7 @@ class Apache_Solr_Service_Balancer
 	 * @param string $rawPost
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function add($rawPost)
 	{
@@ -484,7 +484,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->add($rawPost);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -507,7 +507,7 @@ class Apache_Solr_Service_Balancer
 	 * @param boolean $overwriteCommitted
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function addDocument(Apache_Solr_Document $document, $allowDups = false, $overwritePending = true, $overwriteCommitted = true)
 	{
@@ -519,7 +519,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->addDocument($document, $allowDups, $overwritePending, $overwriteCommitted);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -542,7 +542,7 @@ class Apache_Solr_Service_Balancer
 	 * @param boolean $overwriteCommitted
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function addDocuments($documents, $allowDups = false, $overwritePending = true, $overwriteCommitted = true)
 	{
@@ -554,7 +554,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->addDocuments($documents, $allowDups, $overwritePending, $overwriteCommitted);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -576,7 +576,7 @@ class Apache_Solr_Service_Balancer
 	 * @param boolean $waitSearcher
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function commit($optimize = true, $waitFlush = true, $waitSearcher = true, $timeout = 3600)
 	{
@@ -588,7 +588,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->commit($optimize, $waitFlush, $waitSearcher, $timeout);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -609,7 +609,7 @@ class Apache_Solr_Service_Balancer
 	 * @param string $rawPost
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function delete($rawPost)
 	{
@@ -621,7 +621,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->delete($rawPost);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -643,7 +643,7 @@ class Apache_Solr_Service_Balancer
 	 * @param boolean $fromCommitted
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function deleteById($id, $fromPending = true, $fromCommitted = true)
 	{
@@ -655,7 +655,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->deleteById($id, $fromPending, $fromCommitted);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -677,7 +677,7 @@ class Apache_Solr_Service_Balancer
 	 * @param boolean $fromCommitted
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function deleteByQuery($rawQuery, $fromPending = true, $fromCommitted = true)
 	{
@@ -689,7 +689,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->deleteByQuery($rawQuery, $fromPending, $fromCommitted);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -711,7 +711,7 @@ class Apache_Solr_Service_Balancer
 	 * @param boolean $waitSearcher
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function optimize($waitFlush = true, $waitSearcher = true)
 	{
@@ -723,7 +723,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->optimize($waitFlush, $waitSearcher);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{
@@ -746,7 +746,7 @@ class Apache_Solr_Service_Balancer
 	 * @param array $params key / value pairs for query parameters, use arrays for multivalued parameters
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function search($query, $offset = 0, $limit = 10, $params = array())
 	{
@@ -758,7 +758,7 @@ class Apache_Solr_Service_Balancer
 			{
 				return $service->search($query, $offset, $limit, $params);
 			}
-			catch (Exception $e)
+			catch (Apache_Solr_HttpTransportException $e)
 			{
 				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
 				{

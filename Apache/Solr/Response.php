@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  * @version $Id$
  *
@@ -241,6 +241,8 @@ class Apache_Solr_Response
 
 	/**
 	 * Parse the raw response into the parsed_data array for access
+	 * 
+	 * @throws Apache_Solr_ParserException If the data could not be parsed
 	 */
 	protected function _parseData()
 	{
@@ -250,7 +252,7 @@ class Apache_Solr_Response
 		// check that we receive a valid JSON response - we should never receive a null
 		if ($data === null)
 		{
-			throw new Exception('Solr response does not appear to be valid JSON, please examine the raw response with getRawResposne() method');
+			throw new Apache_Solr_ParserException('Solr response does not appear to be valid JSON, please examine the raw response with getRawResponse() method');
 		}
 
 		//if we're configured to collapse single valued arrays or to convert them to Apache_Solr_Document objects

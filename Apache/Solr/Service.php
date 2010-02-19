@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  * @version $Id$
  *
@@ -40,6 +40,11 @@
 // Doesn't follow typical include path conventions, but is more convenient for users
 require_once(dirname(__FILE__) . '/Document.php');
 require_once(dirname(__FILE__) . '/Response.php');
+
+require_once(dirname(__FILE__) . '/Exception.php');
+require_once(dirname(__FILE__) . '/HttpTransportException.php');
+require_once(dirname(__FILE__) . '/InvalidArgumentException.php');
+require_once(dirname(__FILE__) . '/NoServiceAvailableException.php');
 
 /**
  * Starting point for the Solr API. Represents a Solr server resource and has
@@ -305,7 +310,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Read timeout in seconds
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If a non 200 response status is returned
+	 * @throws Apache_Solr_HttpTransportException If a non 200 response status is returned
 	 */
 	protected function _sendRawGet($url, $timeout = FALSE)
 	{
@@ -329,7 +334,7 @@ class Apache_Solr_Service
 
 		if ($response->getHttpStatus() != 200)
 		{
-			throw new Exception('"' . $response->getHttpStatus() . '" Status: ' . $response->getHttpStatusMessage(), $response->getHttpStatus());
+			throw new Apache_Solr_HttpTransportException('"' . $response->getHttpStatus() . '" Status: ' . $response->getHttpStatusMessage(), $response->getHttpStatus());
 		}
 
 		return $response;
@@ -344,7 +349,7 @@ class Apache_Solr_Service
 	 * @param string $contentType
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If a non 200 response status is returned
+	 * @throws Apache_Solr_HttpTransportException If a non 200 response status is returned
 	 */
 	protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8')
 	{
@@ -380,7 +385,7 @@ class Apache_Solr_Service
 
 		if ($response->getHttpStatus() != 200)
 		{
-			throw new Exception('"' . $response->getHttpStatus() . '" Status: ' . $response->getHttpStatusMessage(), $response->getHttpStatus());
+			throw new Apache_Solr_HttpTransportException('"' . $response->getHttpStatus() . '" Status: ' . $response->getHttpStatusMessage(), $response->getHttpStatus());
 		}
 
 		return $response;
@@ -400,13 +405,15 @@ class Apache_Solr_Service
 	 * Set the host used. If empty will fallback to constants
 	 *
 	 * @param string $host
+	 * 
+	 * @throws Apache_Solr_InvalidArgumentException If the host parameter is empty
 	 */
 	public function setHost($host)
 	{
 		//Use the provided host or use the default
 		if (empty($host))
 		{
-			throw new Exception('Host parameter is empty');
+			throw new Apache_Solr_InvalidArgumentException('Host parameter is empty');
 		}
 		else
 		{
@@ -433,6 +440,8 @@ class Apache_Solr_Service
 	 * Set the port used. If empty will fallback to constants
 	 *
 	 * @param integer $port
+	 * 
+	 * @throws Apache_Solr_InvalidArgumentException If the port parameter is empty
 	 */
 	public function setPort($port)
 	{
@@ -441,7 +450,7 @@ class Apache_Solr_Service
 
 		if ($port <= 0)
 		{
-			throw new Exception('Port is not a valid port number');
+			throw new Apache_Solr_InvalidArgumentException('Port is not a valid port number');
 		}
 		else
 		{
@@ -527,7 +536,7 @@ class Apache_Solr_Service
 	 * the facet counts format.
 	 *
 	 * @param string $namedListTreatment
-	 * @throws Exception If invalid option is set
+	 * @throws Apache_Solr_InvalidArgumentException If invalid option is set
 	 */
 	public function setNamedListTreatment($namedListTreatment)
 	{
@@ -542,7 +551,7 @@ class Apache_Solr_Service
 				break;
 
 			default:
-				throw new Exception('Not a valid named list treatement option');
+				throw new Apache_Solr_InvalidArgumentException('Not a valid named list treatement option');
 		}
 	}
 
@@ -629,7 +638,7 @@ class Apache_Solr_Service
 	 *
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function threads()
 	{
@@ -643,7 +652,7 @@ class Apache_Solr_Service
 	 * @param string $rawPost
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function add($rawPost)
 	{
@@ -659,7 +668,7 @@ class Apache_Solr_Service
 	 * @param boolean $overwriteCommitted
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function addDocument(Apache_Solr_Document $document, $allowDups = false, $overwritePending = true, $overwriteCommitted = true)
 	{
@@ -683,7 +692,7 @@ class Apache_Solr_Service
 	 * @param boolean $overwriteCommitted
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function addDocuments($documents, $allowDups = false, $overwritePending = true, $overwriteCommitted = true)
 	{
@@ -789,7 +798,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Maximum expected duration (in seconds) of the commit operation on the server (otherwise, will throw a communication exception). Defaults to 1 hour
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function commit($optimize = true, $waitFlush = true, $waitSearcher = true, $timeout = 3600)
 	{
@@ -810,7 +819,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function delete($rawPost, $timeout = 3600)
 	{
@@ -826,7 +835,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function deleteById($id, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
@@ -850,7 +859,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function deleteByMultipleIds($ids, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
@@ -881,7 +890,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function deleteByQuery($rawQuery, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
@@ -905,7 +914,7 @@ class Apache_Solr_Service
 	 * @param float $timeout Maximum expected duration of the commit operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
 	public function optimize($waitFlush = true, $waitSearcher = true, $timeout = 3600)
 	{
@@ -924,9 +933,11 @@ class Apache_Solr_Service
 	 * @param int $offset The starting offset for result documents
 	 * @param int $limit The maximum number of result documents to return
 	 * @param array $params key / value pairs for other query parameters (see Solr documentation), use arrays for parameter keys used more than once (e.g. facet.field)
+	 * @param string $method The HTTP method (Apache_Solr_Service::METHOD_GET or Apache_Solr_Service::METHOD::POST)
 	 * @return Apache_Solr_Response
 	 *
-	 * @throws Exception If an error occurs during the service call
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
+	 * @throws Apache_Solr_InvalidArgumentException If an invalid HTTP method is used
 	 */
 	public function search($query, $offset = 0, $limit = 10, $params = array(), $method = self::METHOD_GET)
 	{
@@ -977,7 +988,7 @@ class Apache_Solr_Service
 		}
 		else
 		{
-			throw new Exception("Unsupported method '$method', please use the Apache_Solr_Service::METHOD_* constants");
+			throw new Apache_Solr_InvalidArgumentException("Unsupported method '$method', please use the Apache_Solr_Service::METHOD_* constants");
 		}
 	}
 }
