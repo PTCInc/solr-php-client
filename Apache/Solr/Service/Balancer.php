@@ -607,11 +607,12 @@ class Apache_Solr_Service_Balancer
 	 * a complete and well formed "delete" xml document
 	 *
 	 * @param string $rawPost
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
-	public function delete($rawPost)
+	public function delete($rawPost, $timeout = 3600)
 	{
 		$service = $this->_selectWriteService();
 
@@ -619,7 +620,7 @@ class Apache_Solr_Service_Balancer
 		{
 			try
 			{
-				return $service->delete($rawPost);
+				return $service->delete($rawPost, $timeout);
 			}
 			catch (Apache_Solr_HttpTransportException $e)
 			{
@@ -641,11 +642,12 @@ class Apache_Solr_Service_Balancer
 	 * @param string $id
 	 * @param boolean $fromPending
 	 * @param boolean $fromCommitted
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
-	public function deleteById($id, $fromPending = true, $fromCommitted = true)
+	public function deleteById($id, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
 		$service = $this->_selectWriteService();
 
@@ -653,7 +655,42 @@ class Apache_Solr_Service_Balancer
 		{
 			try
 			{
-				return $service->deleteById($id, $fromPending, $fromCommitted);
+				return $service->deleteById($id, $fromPending, $fromCommitted, $timeout);
+			}
+			catch (Apache_Solr_HttpTransportException $e)
+			{
+				if ($e->getCode() != 0) //IF NOT COMMUNICATION ERROR
+				{
+					throw $e;
+				}
+			}
+
+			$service = $this->_selectWriteService(true);
+		} while ($service);
+
+		return false;
+	}
+
+	/**
+	 * Create and post a delete document based on multiple document IDs.
+	 *
+	 * @param array $ids Expected to be utf-8 encoded strings
+	 * @param boolean $fromPending
+	 * @param boolean $fromCommitted
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
+	 * @return Apache_Solr_Response
+	 *
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
+	 */
+	public function deleteByMultipleIds($ids, $fromPending = true, $fromCommitted = true, $timeout = 3600)
+	{
+		$service = $this->_selectWriteService();
+
+		do
+		{
+			try
+			{
+				return $service->deleteByMultipleId($ids, $fromPending, $fromCommitted, $timeout);
 			}
 			catch (Apache_Solr_HttpTransportException $e)
 			{
@@ -675,11 +712,12 @@ class Apache_Solr_Service_Balancer
 	 * @param string $rawQuery
 	 * @param boolean $fromPending
 	 * @param boolean $fromCommitted
+	 * @param float $timeout Maximum expected duration of the delete operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
-	public function deleteByQuery($rawQuery, $fromPending = true, $fromCommitted = true)
+	public function deleteByQuery($rawQuery, $fromPending = true, $fromCommitted = true, $timeout = 3600)
 	{
 		$service = $this->_selectWriteService();
 
@@ -687,7 +725,7 @@ class Apache_Solr_Service_Balancer
 		{
 			try
 			{
-				return $service->deleteByQuery($rawQuery, $fromPending, $fromCommitted);
+				return $service->deleteByQuery($rawQuery, $fromPending, $fromCommitted, $timeout);
 			}
 			catch (Apache_Solr_HttpTransportException $e)
 			{
@@ -709,11 +747,12 @@ class Apache_Solr_Service_Balancer
 	 *
 	 * @param boolean $waitFlush
 	 * @param boolean $waitSearcher
+	 * @param float $timeout Maximum expected duration of the optimize operation on the server (otherwise, will throw a communication exception)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
-	public function optimize($waitFlush = true, $waitSearcher = true)
+	public function optimize($waitFlush = true, $waitSearcher = true, $timeout = 3600)
 	{
 		$service = $this->_selectWriteService();
 
@@ -721,7 +760,7 @@ class Apache_Solr_Service_Balancer
 		{
 			try
 			{
-				return $service->optimize($waitFlush, $waitSearcher);
+				return $service->optimize($waitFlush, $waitSearcher, $timeout);
 			}
 			catch (Apache_Solr_HttpTransportException $e)
 			{
@@ -744,11 +783,12 @@ class Apache_Solr_Service_Balancer
 	 * @param int $offset The starting offset for result documents
 	 * @param int $limit The maximum number of result documents to return
 	 * @param array $params key / value pairs for query parameters, use arrays for multivalued parameters
+	 * @param string $method The HTTP method (Apache_Solr_Service::METHOD_GET or Apache_Solr_Service::METHOD::POST)
 	 * @return Apache_Solr_Response
 	 *
 	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
 	 */
-	public function search($query, $offset = 0, $limit = 10, $params = array())
+	public function search($query, $offset = 0, $limit = 10, $params = array(), $method = Apache_Solr_Service::METHOD_GET)
 	{
 		$service = $this->_selectReadService();
 
@@ -756,7 +796,7 @@ class Apache_Solr_Service_Balancer
 		{
 			try
 			{
-				return $service->search($query, $offset, $limit, $params);
+				return $service->search($query, $offset, $limit, $params, $method);
 			}
 			catch (Apache_Solr_HttpTransportException $e)
 			{
