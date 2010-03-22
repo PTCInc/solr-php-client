@@ -992,7 +992,7 @@ class Apache_Solr_Service
 		}
 		else if ($method == self::METHOD_POST)
 		{
-			return $this->_sendRawPost($this->_searchUrl, $queryString, FALSE, 'application/x-www-form-urlencoded');
+			return $this->_sendRawPost($this->_searchUrl, $queryString, FALSE, 'application/x-www-form-urlencoded; charset=UTF-8');
 		}
 		else
 		{
