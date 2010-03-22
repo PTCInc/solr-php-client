@@ -329,7 +329,11 @@ class Apache_Solr_Service
 			stream_context_set_option($this->_getContext, 'http', 'timeout', $this->_defaultTimeout);
 		}
 
-		//$http_response_header is set by file_get_contents
+		// $http_response_header will be updated by the call to file_get_contents later
+		// see http://us.php.net/manual/en/wrappers.http.php for documentation
+		// Unfortunately, it will still create a notice in analyzers if we don't set it here
+		$http_response_header = null;
+
 		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_getContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
 		if ($response->getHttpStatus() != 200)
@@ -380,7 +384,11 @@ class Apache_Solr_Service
 			stream_context_set_option($this->_postContext, 'http', 'timeout', $timeout);
 		}
 
-		//$http_response_header is set by file_get_contents
+		// $http_response_header will be updated by the call to file_get_contents later
+		// see http://us.php.net/manual/en/wrappers.http.php for documentation
+		// Unfortunately, it will still create a notice in analyzers if we don't set it here
+		$http_response_header = null;
+
 		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_postContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
 		if ($response->getHttpStatus() != 200)
@@ -405,7 +413,7 @@ class Apache_Solr_Service
 	 * Set the host used. If empty will fallback to constants
 	 *
 	 * @param string $host
-	 * 
+	 *
 	 * @throws Apache_Solr_InvalidArgumentException If the host parameter is empty
 	 */
 	public function setHost($host)
@@ -440,7 +448,7 @@ class Apache_Solr_Service
 	 * Set the port used. If empty will fallback to constants
 	 *
 	 * @param integer $port
-	 * 
+	 *
 	 * @throws Apache_Solr_InvalidArgumentException If the port parameter is empty
 	 */
 	public function setPort($port)
