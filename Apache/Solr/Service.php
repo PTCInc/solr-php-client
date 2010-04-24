@@ -118,6 +118,7 @@ class Apache_Solr_Service
 	const UPDATE_SERVLET = 'update';
 	const SEARCH_SERVLET = 'select';
 	const THREADS_SERVLET = 'admin/threads';
+	const EXTRACT_SERVLET = 'update/extract';
 
 	/**
 	 * Server identification strings
@@ -295,12 +296,38 @@ class Apache_Solr_Service
 	protected function _initUrls()
 	{
 		//Initialize our full servlet URLs now that we have server information
+		$this->_extractUrl = $this->_constructUrl(self::EXTRACT_SERVLET);
 		$this->_pingUrl = $this->_constructUrl(self::PING_SERVLET);
-		$this->_updateUrl = $this->_constructUrl(self::UPDATE_SERVLET, array('wt' => self::SOLR_WRITER ));
 		$this->_searchUrl = $this->_constructUrl(self::SEARCH_SERVLET);
 		$this->_threadsUrl = $this->_constructUrl(self::THREADS_SERVLET, array('wt' => self::SOLR_WRITER ));
+		$this->_updateUrl = $this->_constructUrl(self::UPDATE_SERVLET, array('wt' => self::SOLR_WRITER ));
 
 		$this->_urlsInited = true;
+	}
+
+	protected function _generateQueryString($params)
+	{
+		// use http_build_query to encode our arguments because its faster
+		// than urlencoding all the parts ourselves in a loop
+		//
+		// because http_build_query treats arrays differently than we want to, correct the query
+		// string by changing foo[#]=bar (# being an actual number) parameter strings to just
+		// multiple foo=bar strings. This regex should always work since '=' will be urlencoded
+		// anywhere else the regex isn't expecting it
+		//
+		// NOTE: before php 5.1.3 brackets were not url encoded by http_build query - we've checked
+		// the php version in the constructor and put the results in the instance variable. Also, before
+		// 5.1.2 the arg_separator parameter was not available, so don't use it
+		if ($this->_queryBracketsEscaped)
+		{
+			$queryString = http_build_query($params, null, $this->_queryStringDelimiter);
+			return preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $queryString);
+		}
+		else
+		{
+			$queryString = http_build_query($params);
+			return preg_replace('/\\[(?:[0-9]|[1-9][0-9]+)\\]=/', '=', $queryString);
+		}
 	}
 
 	/**
@@ -338,7 +365,7 @@ class Apache_Solr_Service
 
 		if ($response->getHttpStatus() != 200)
 		{
-			throw new Apache_Solr_HttpTransportException('"' . $response->getHttpStatus() . '" Status: ' . $response->getHttpStatusMessage(), $response->getHttpStatus());
+			throw new Apache_Solr_HttpTransportException($response);
 		}
 
 		return $response;
@@ -393,7 +420,7 @@ class Apache_Solr_Service
 
 		if ($response->getHttpStatus() != 200)
 		{
-			throw new Apache_Solr_HttpTransportException('"' . $response->getHttpStatus() . '" Status: ' . $response->getHttpStatusMessage(), $response->getHttpStatus());
+			throw new Apache_Solr_HttpTransportException($response);
 		}
 
 		return $response;
@@ -914,6 +941,88 @@ class Apache_Solr_Service
 	}
 
 	/**
+	 * Use Solr Cell to extract document contents. See {@link http://wiki.apache.org/solr/ExtractingRequestHandler} for information on how
+	 * to use Solr Cell and what parameters are available.
+	 *
+	 * NOTE: when passing an Apache_Solr_Document instance, field names and boosts will automatically be prepended by "literal." and "boost."
+	 * as appropriate. Any keys from the $params array will NOT be treated this way. Any mappings from the document will overwrite key / value
+	 * pairs in the params array if they have the same name (e.g. you pass a "literal.id" key and value in your $params array but you also
+	 * pass in a document isntance with an "id" field" - the document's value(s) will take precedence).
+	 *
+	 * @param string $file Path to file to extract data from
+	 * @param array $params optional array of key value pairs that will be sent with the post (see Solr Cell documentation)
+	 * @param Apache_Solr_Document $document optional document that will be used to generate post parameters (literal.* and boost.* params)
+	 * @param string $mimetype optional mimetype specification (for the file being extracted)
+	 *
+	 * @return Apache_Solr_Response
+	 *
+	 * @throws Apache_Solr_InvalidArgumentException if $file, $params, or $document are invalid.
+	 *
+	 * @todo Should be using multipart/form-data to post parameter values, but I could not get my implementation to work. Needs revisisted.
+	 */
+	public function extract($file, $params = array(), $document = null, $mimetype = 'application/octet-stream')
+	{
+		// read the contents of the file
+		$contents = file_get_contents($file);
+
+		if ($contents !== false)
+		{
+			// check if $params is an array (allow null for default empty array)
+			if (!is_null($params))
+			{
+				if (!is_array($params))
+				{
+					throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
+				}
+			}
+			else
+			{
+				$params = array();
+			}
+
+			// make sure we receive our response in JSON and have proper name list treatment
+			$params['wt'] = self::SOLR_WRITER;
+			$params['json.nl'] = $this->_namedListTreatment;
+
+			// add the resource.name parameter if not specified
+			if (!isset($params['resource.name']))
+			{
+				$params['resource.name'] = basename($file);
+			}
+
+			// check if $document is an Apache_Solr_Document instance
+			if (!is_null($document) && $document instanceof Apache_Solr_Document)
+			{
+				// iterate document, adding literal.* and boost.* fields to $params as appropriate
+				foreach ($document as $field => $fieldValue)
+				{
+					// check if we need to add a boost.* parameters
+					$fieldBoost = $document->getFieldBoost();
+
+					if ($fieldBoost !== false)
+					{
+						$params["boost.{$field}"] = $fieldBoost;
+					}
+
+					// add the literal.* parameter
+					$params["literal.{$field}"] = $fieldValue;
+				}
+			}
+
+			// params will be sent to SOLR in the QUERY STRING
+			$queryString = $this->_generateQueryString($params);
+
+
+			// the file contents will be sent to SOLR as the POST BODY - we use application/octect-stream
+			return $this->_sendRawPost($this->_extractUrl . $this->_queryDelimiter . $queryString, $contents, false, $mimetype);
+		}
+		else
+		{
+			throw new Apache_Solr_InvalidArgumentException("Could not retrieve content from file '{$file}'");
+		}
+	}
+
+	/**
 	 * Send an optimize command.  Will be synchronous unless both wait parameters are set
 	 * to false.
 	 *
@@ -964,27 +1073,7 @@ class Apache_Solr_Service
 		$params['start'] = $offset;
 		$params['rows'] = $limit;
 
-		// use http_build_query to encode our arguments because its faster
-		// than urlencoding all the parts ourselves in a loop
-		//
-		// because http_build_query treats arrays differently than we want to, correct the query
-		// string by changing foo[#]=bar (# being an actual number) parameter strings to just
-		// multiple foo=bar strings. This regex should always work since '=' will be urlencoded
-		// anywhere else the regex isn't expecting it
-		//
-		// NOTE: before php 5.1.3 brackets were not url encoded by http_build query - we've checked
-		// the php version in the constructor and put the results in the instance variable. Also, before
-		// 5.1.2 the arg_separator parameter was not available, so don't use it
-		if ($this->_queryBracketsEscaped)
-		{
-			$queryString = http_build_query($params, null, $this->_queryStringDelimiter);
-			$queryString = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $queryString);
-		}
-		else
-		{
-			$queryString = http_build_query($params);
-			$queryString = preg_replace('/\\[(?:[0-9]|[1-9][0-9]+)\\]=/', '=', $queryString);
-		}
+		$queryString = $this->_generateQueryString($params);
 
 		if ($method == self::METHOD_GET)
 		{
