@@ -45,6 +45,7 @@ require_once(dirname(__FILE__) . '/Exception.php');
 require_once(dirname(__FILE__) . '/HttpTransportException.php');
 require_once(dirname(__FILE__) . '/InvalidArgumentException.php');
 require_once(dirname(__FILE__) . '/NoServiceAvailableException.php');
+require_once(dirname(__FILE__) . '/ParserException.php');
 
 /**
  * Starting point for the Solr API. Represents a Solr server resource and has
