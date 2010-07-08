@@ -568,6 +568,32 @@ class Apache_Solr_Service
 	}
 
 	/**
+	 * Get the current default timeout setting (initially the default_socket_timeout ini setting)
+	 * in seconds
+	 *
+	 * @return float
+	 */
+	public function getDefaultTimeout()
+	{
+		return $this->_defaultTimeout;
+	}
+
+	/**
+	 * Set the default timeout for all calls that aren't passed a specific timeout
+	 *
+	 * @param float $timeout Timeout value in seconds
+	 */
+	public function setDefaultTimeout($timeout)
+	{
+		$timeout = floatval($timeout);
+
+		if ($timeout >= 0)
+		{
+			$this->_defaultTimeout = $timeout;
+		}
+	}
+
+	/**
 	 * Set how NamedLists should be formatted in the response data. This mainly effects
 	 * the facet counts format.
 	 *
