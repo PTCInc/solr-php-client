@@ -314,7 +314,12 @@ class Apache_Solr_Document implements IteratorAggregate
 	 */
 	public function __get($key)
 	{
-		return $this->_fields[$key];
+		if (isset($this->_fields[$key]))
+		{
+			return $this->_fields[$key];
+		}
+		
+		return null;
 	}
 
 	/**
