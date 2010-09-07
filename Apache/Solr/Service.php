@@ -1024,7 +1024,7 @@ class Apache_Solr_Service
 				foreach ($document as $field => $fieldValue)
 				{
 					// check if we need to add a boost.* parameters
-					$fieldBoost = $document->getFieldBoost();
+					$fieldBoost = $document->getFieldBoost($field);
 
 					if ($fieldBoost !== false)
 					{
