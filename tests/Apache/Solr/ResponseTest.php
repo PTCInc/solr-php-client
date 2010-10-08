@@ -155,4 +155,40 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(count($fixture->response->docs) > 0, 'There are not 1 or more documents, cannot test');
 		$this->assertType('Apache_Solr_Document', $fixture->response->docs[0], 'The first document is not of type Apache_Solr_Document');
 	}
+	
+	public function testDontCreateDocuments()
+	{
+		$fixture = self::get200ResponseWithDocuments(false);
+
+		$this->assertTrue(count($fixture->response->docs) > 0, 'There are not 1 or more documents, cannot test');
+		$this->assertType('stdClass', $fixture->response->docs[0], 'The first document is not of type stdClass');
+	}
+	
+	public function testGetHttpStatusMessage()
+	{
+		$fixture = self::get200Response();
+		
+		$this->assertEquals("OK", $fixture->getHttpStatusMessage());
+	}
+	
+	public function testMagicGetReturnsNullForUndefinedData()
+	{
+		$fixture = self::get200Response();
+		
+		$this->assertNull($fixture->doesnotexist);
+	}
+	
+	public function testMagicIssetForDefinedProperty()
+	{
+		$fixture = self::get200Response();
+		
+		$this->assertTrue(isset($fixture->responseHeader));
+	}
+	
+	public function testMagicIssetForUndefinedProperty()
+	{
+		$fixture = self::get200Response();
+		
+		$this->assertFalse(isset($fixture->doesnotexist));
+	}
 }

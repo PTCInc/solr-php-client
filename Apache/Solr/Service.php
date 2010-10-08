@@ -938,7 +938,7 @@ class Apache_Solr_Service
 	public function extract($file, $params = array(), $document = null, $mimetype = 'application/octet-stream')
 	{
 		// read the contents of the file
-		$contents = file_get_contents($file);
+		$contents = @file_get_contents($file);
 
 		if ($contents !== false)
 		{
@@ -992,7 +992,7 @@ class Apache_Solr_Service
 		}
 		else
 		{
-			throw new Apache_Solr_InvalidArgumentException("Could not retrieve content from file '{$file}'");
+			throw new Apache_Solr_InvalidArgumentException("File '{$file}' is empty or could not be read");
 		}
 	}
 
@@ -1032,11 +1032,20 @@ class Apache_Solr_Service
 	 */
 	public function search($query, $offset = 0, $limit = 10, $params = array(), $method = self::METHOD_GET)
 	{
-		if (!is_array($params))
+		// ensure params is an array
+		if (!is_null($params))
+		{
+			if (!is_array($params))
+			{
+				// params was specified but was not an array - invalid
+				throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
+			}
+		}
+		else
 		{
 			$params = array();
 		}
-
+		
 		// construct our full parameters
 
 		// common parameters in this interface

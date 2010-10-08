@@ -106,6 +106,14 @@ class Apache_Solr_HttpTransport_ResponseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(self::STATUS_MESSAGE_200, $statusMessage);
 	}
 	
+	public function testGetStatusMessageWithUnknownCode()
+	{
+		$fixture = new Apache_Solr_HttpTransport_Response(499, null, null, null, null);
+		
+		$statusMessage = $fixture->getStatusMessage();
+		$this->assertEquals("Unknown Status", $statusMessage);
+	}
+	
 	public function testGetBody()
 	{
 		$fixture = self::get200Response();

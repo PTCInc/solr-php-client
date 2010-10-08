@@ -6,7 +6,7 @@
 	</logging>
 	<filter>
 		<whitelist>
-			<directory suffix=".php">../</directory>
+			<directory suffix=".php">../Apache</directory>
 			<exclude>
 				<file>./run.php</file>
 			</exclude>
