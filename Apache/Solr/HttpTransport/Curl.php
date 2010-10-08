@@ -169,7 +169,7 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 			CURLOPT_NOBODY => false,
 
 			// make sure we're POST
-			CURLOPT_PORT => true,
+			CURLOPT_POST => true,
 
 			// set the URL
 			CURLOPT_URL => $url,

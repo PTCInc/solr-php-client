@@ -240,7 +240,7 @@ class Apache_Solr_Service
 
 		$this->_initUrls();
 
-		if ($httpTransport !== false)
+		if ($httpTransport)
 		{
 			$this->setHttpTransport($httpTransport);
 		}
@@ -626,7 +626,7 @@ class Apache_Solr_Service
 	public function ping($timeout = 2)
 	{
 		$start = microtime(true);
-
+		
 		$httpTransport = $this->getHttpTransport();
 
 		$httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timeout);
