@@ -329,10 +329,10 @@ class Apache_Solr_Service
 	protected function _sendRawGet($url, $timeout = FALSE)
 	{
 		$httpTransport = $this->getHttpTransport();
-		
-		$httpResponse = $httpTransport->performGetRequest($url, $timemout);
+
+		$httpResponse = $httpTransport->performGetRequest($url, $timeout);
 		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
-		
+
 		if ($solrResponse->getHttpStatus() != 200)
 		{
 			throw new Apache_Solr_HttpTransportException($solrResponse);
@@ -355,10 +355,10 @@ class Apache_Solr_Service
 	protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8')
 	{
 		$httpTransport = $this->getHttpTransport();
-		
-		$httpResponse = $httpTransport->performPostRequest($url, $rawPost, $contentType, $timemout);
+
+		$httpResponse = $httpTransport->performPostRequest($url, $rawPost, $contentType, $timeout);
 		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
-		
+
 		if ($solrResponse->getHttpStatus() != 200)
 		{
 			throw new Apache_Solr_HttpTransportException($solrResponse);
@@ -465,7 +465,7 @@ class Apache_Solr_Service
 			$this->_initUrls();
 		}
 	}
-	
+
 	/**
 	 * Get the current configured HTTP Transport
 	 *
@@ -477,13 +477,13 @@ class Apache_Solr_Service
 		if ($this->_httpTransport === false)
 		{
 			require_once(dirname(__FILE__) . '/HttpTransport/FileGetContents.php');
-			
+
 			$this->_httpTransport = new Apache_Solr_HttpTransport_FileGetContents();
 		}
-		
+
 		return $this->_httpTransport;
 	}
-	
+
 	/**
 	 * Set the HTTP Transport implemenation that will be used for all HTTP requests
 	 *
@@ -552,12 +552,12 @@ class Apache_Solr_Service
 	 * Set the default timeout for all calls that aren't passed a specific timeout
 	 *
 	 * @param float $timeout Timeout value in seconds
-	 * 
+	 *
 	 * @deprecated Use the setDefaultTimeout method on the HTTP transport implementation
 	 */
 	public function setDefaultTimeout($timeout)
 	{
-		$this->getHttpTransport()->setDefaultTimeout();
+		$this->getHttpTransport()->setDefaultTimeout($timeout);
 	}
 
 	/**
@@ -627,9 +627,11 @@ class Apache_Solr_Service
 	{
 		$start = microtime(true);
 
-		$httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timemout);
+		$httpTransport = $this->getHttpTransport();
+
+		$httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timeout);
 		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
-		
+
 		if ($solrResponse->getHttpStatus() == 200)
 		{
 			return microtime(true) - $start;

@@ -44,12 +44,12 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		return new Apache_Solr_Response(Apache_Solr_HttpTransport_ResponseTest::get0Response(), $createDocuments, $collapseSingleValueArrays);
 	}
-	
+
 	static public function get200Response($createDocuments = true, $collapseSingleValueArrays = true)
 	{
 		return new Apache_Solr_Response(Apache_Solr_HttpTransport_ResponseTest::get200Response(), $createDocuments, $collapseSingleValueArrays);
 	}
-	
+
 	static public function get200ResponseWithDocuments($createDocuments = true, $collapseSingleValueArrays = true)
 	{
 		return new Apache_Solr_Response(Apache_Solr_HttpTransport_ResponseTest::get200ResponseWithDocuments(), $createDocuments, $collapseSingleValueArrays);
@@ -59,7 +59,7 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		return new Apache_Solr_Response(Apache_Solr_HttpTransport_ResponseTest::get400Response(), $createDocuments, $collapseSingleValueArrays);
 	}
-	
+
 	static public function get404Response($createDocuments = true, $collapseSingleValueArrays = true)
 	{
 		return new Apache_Solr_Response(Apache_Solr_HttpTransport_ResponseTest::get404Response(), $createDocuments, $collapseSingleValueArrays);
@@ -114,12 +114,12 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 		$fixture = self::get0Response();
 
 		// attempting to magic get a part of the response
-		// should through a ParserException
-		$header = $fixture->responseHeader;
-		
+		// should throw a ParserException
+		$fixture->responseHeader;
+
 		$this->fail("Expected Apache_Solr_ParserException was not raised");
 	}
-	
+
 	/**
 	 * @expectedException Apache_Solr_ParserException
 	 */
@@ -128,12 +128,12 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 		$fixture = self::get400Response();
 
 		// attempting to magic get a part of the response
-		// should through a ParserException
-		$header = $fixture->responseHeader;
-		
+		// should throw a ParserException
+		$fixture->responseHeader;
+
 		$this->fail("Expected Apache_Solr_ParserException was not raised");
 	}
-	
+
 	/**
 	 * @expectedException Apache_Solr_ParserException
 	 */
@@ -142,16 +142,16 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 		$fixture = self::get404Response();
 
 		// attempting to magic get a part of the response
-		// should through a ParserException
-		$header = $fixture->responseHeader;
-		
+		// should throw a ParserException
+		$fixture->responseHeader;
+
 		$this->fail("Expected Apache_Solr_ParserException was not raised");
 	}
-		
+
 	public function testCreateDocuments()
 	{
 		$fixture = self::get200ResponseWithDocuments();
-		
+
 		$this->assertTrue(count($fixture->response->docs) > 0, 'There are not 1 or more documents, cannot test');
 		$this->assertType('Apache_Solr_Document', $fixture->response->docs[0], 'The first document is not of type Apache_Solr_Document');
 	}
