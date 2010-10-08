@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,37 +27,63 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
+ * @version $Id: $
  *
  * @package Apache
  * @subpackage Solr
- * @author Donovan Jimenez <djimenez@conduit-it.com>
+ * @author Timo Schmidt <timo.schmidt@aoemedia.de>, Donovan Jimenez <djimenez@conduit-it.com>
  */
 
 /**
- * Test Suite for all Apache_Solr package classes and sub sub packages
+ * Convenience class that implements the transport implementation. Can be extended by
+ * real implementations to do some of the common book keeping
  */
-class Apache_Solr_TestAll extends PHPUnit_Framework_TestSuite
-{
+abstract class Apache_Solr_HttpTransport_Abstract implements Apache_Solr_HttpTransport_Interface
+{	
 	/**
-	 * Create the test suite instance
+	 * Our default timeout value for requests that don't specify a timeout
 	 *
-	 * @return PHPUnit_Framework_TestSuite
+	 * @var float
 	 */
-	public static function suite()
+	private $_defaultTimeout = false;
+		
+	/**
+	 * Get the current default timeout setting (initially the default_socket_timeout ini setting)
+	 * in seconds
+	 *
+	 * @return float
+	 */
+	public function getDefaultTimeout()
 	{
-		// create test suite
-		$suite = new Apache_Solr_TestAll('Run all PHP Solr Client tests');
+		// lazy load the default timeout from the ini settings
+		if ($this->_defaultTimeout === false)
+		{
+			$this->_defaultTimeout = (int) ini_get('default_socket_timeout');
 
-		// individual test cases under Apache/Solr
-		$suite->addTestSuite('Apache_Solr_DocumentTest');
-		$suite->addTestSuite('Apache_Solr_ResponseTest');
-		//$suite->addTestSuite('Apache_Solr_ServiceTest');
-
-		// test suites under Apache/Solr/Service
-		//$suite->addTest(Apache_Solr_Service_TestAll::suite());
-
-		return $suite;
+			// double check we didn't get 0 for a timeout
+			if ($this->_defaultTimeout <= 0)
+			{
+				$this->_defaultTimeout = 60;
+			}
+		}
+		
+		return $this->_defaultTimeout;
 	}
+	
+	/**
+	 * Set the current default timeout for all HTTP requests
+	 *
+	 * @param float $timeout
+	 */
+	public function setDefaultTimeout($timeout)
+	{
+		$timeout = (float) $timeout;
+		
+		if ($timeout >= 0)
+		{
+			$this->_defaultTimeout = $timeout;
+		}
+	}	
 }

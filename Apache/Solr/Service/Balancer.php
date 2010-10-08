@@ -40,6 +40,8 @@
 // Doesn't follow typical include path conventions, but is more convenient for users
 require_once(dirname(dirname(__FILE__)) . '/Service.php');
 
+require_once(dirname(dirname(__FILE__)) . '/NoServiceAvailableException.php');
+
 /**
  * Reference Implementation for using multiple Solr services in a distribution. Functionality
  * includes:
@@ -464,7 +466,7 @@ class Apache_Solr_Service_Balancer
 	{
 		return $this->_createDocuments;
 	}
-
+	
 	/**
 	 * Raw Add Method. Takes a raw post body and sends it to the update service.  Post body
 	 * should be a complete and well formed "add" xml document.
