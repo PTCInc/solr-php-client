@@ -38,12 +38,12 @@
 
 // See Issue #1 (http://code.google.com/p/solr-php-client/issues/detail?id=1)
 // Doesn't follow typical include path conventions, but is more convenient for users
-require_once(dirname(__FILE__) . '/Document.php');
-require_once(dirname(__FILE__) . '/Response.php');
-
 require_once(dirname(__FILE__) . '/Exception.php');
 require_once(dirname(__FILE__) . '/HttpTransportException.php');
 require_once(dirname(__FILE__) . '/InvalidArgumentException.php');
+
+require_once(dirname(__FILE__) . '/Document.php');
+require_once(dirname(__FILE__) . '/Response.php');
 
 require_once(dirname(__FILE__) . '/HttpTransport/Interface.php');
 
@@ -333,7 +333,7 @@ class Apache_Solr_Service
 		$httpResponse = $httpTransport->performGetRequest($url, $timemout);
 		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
 		
-		if ($response->getHttpStatus() != 200)
+		if ($solrResponse->getHttpStatus() != 200)
 		{
 			throw new Apache_Solr_HttpTransportException($solrResponse);
 		}
@@ -359,7 +359,7 @@ class Apache_Solr_Service
 		$httpResponse = $httpTransport->performPostRequest($url, $rawPost, $contentType, $timemout);
 		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
 		
-		if ($response->getHttpStatus() != 200)
+		if ($solrResponse->getHttpStatus() != 200)
 		{
 			throw new Apache_Solr_HttpTransportException($solrResponse);
 		}
@@ -630,7 +630,7 @@ class Apache_Solr_Service
 		$httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timemout);
 		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
 		
-		if ($response->getHttpStatus() == 200)
+		if ($solrResponse->getHttpStatus() == 200)
 		{
 			return microtime(true) - $start;
 		}
