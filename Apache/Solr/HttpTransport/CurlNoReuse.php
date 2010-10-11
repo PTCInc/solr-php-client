@@ -40,9 +40,11 @@
 require_once(dirname(__FILE__) . '/Abstract.php');
 
 /**
- * A Curl based HTTP transport. Uses a single curl session for all requests.
+ * An alternative Curl HTTP transport that opens and closes a curl session for
+ * every request. This isn't the recommended way to use curl, but some version of
+ * PHP have memory issues.
  */
-class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
+class Apache_Solr_HttpTransport_CurlNoReuse extends Apache_Solr_HttpTransport_Abstract
 {
 	/**
 	 * SVN Revision meta data for this class
@@ -54,43 +56,6 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 	 */
 	const SVN_ID = '$Id:$';
 
-	/**
-	 * Curl Session Handle
-	 *
-	 * @var resource
-	 */
-	private $_curl;
-
-	/**
-	 * Initializes a curl session
-	 */
-	public function __construct()
-	{
-		// initialize a CURL session
-		$this->_curl = curl_init();
-
-		// set common options that will not be changed during the session
-		curl_setopt_array($this->_curl, array(
-			// return the response body from curl_exec
-			CURLOPT_RETURNTRANSFER => true,
-
-			// get the output as binary data
-			CURLOPT_BINARYTRANSFER => true,
-
-			// we do not need the headers in the output, we get everything we need from curl_getinfo
-			CURLOPT_HEADER => false
-		));
-	}
-
-	/**
-	 * Closes a curl session
-	 */
-	function __destruct()
-	{
-		// close our curl session
-		curl_close($this->_curl);
-	}
-
 	public function performGetRequest($url, $timeout = false)
 	{
 		// check the timeout value
@@ -99,15 +64,20 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 			// use the default timeout
 			$timeout = $this->getDefaultTimeout();
 		}
+		
+		$curl = curl_init();
 
 		// set curl GET options
-		curl_setopt_array($this->_curl, array(
-			// make sure we're returning the body
-			CURLOPT_NOBODY => false,
+		curl_setopt_array($curl, array(
+			// return the response body from curl_exec
+			CURLOPT_RETURNTRANSFER => true,
 
-			// make sure we're GET
-			CURLOPT_HTTPGET => true,
+			// get the output as binary data
+			CURLOPT_BINARYTRANSFER => true,
 
+			// we do not need the headers in the output, we get everything we need from curl_getinfo
+			CURLOPT_HEADER => false,
+			
 			// set the URL
 			CURLOPT_URL => $url,
 
@@ -116,10 +86,12 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 		));
 
 		// make the request
-		$responseBody = curl_exec($this->_curl);
+		$responseBody = curl_exec($curl);
 
 		// get info from the transfer
-		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation();
+		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation($curl);
+		
+		curl_close($curl);
 
 		return new Apache_Solr_HttpTransport_Response($statusCode, null, $responseBody, $contentType, $encoding);
 	}
@@ -132,9 +104,20 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 			// use the default timeout
 			$timeout = $this->getDefaultTimeout();
 		}
+		
+		$curl = curl_init();
 
 		// set curl HEAD options
-		curl_setopt_array($this->_curl, array(
+		curl_setopt_array($curl, array(
+			// return the response body from curl_exec
+			CURLOPT_RETURNTRANSFER => true,
+
+			// get the output as binary data
+			CURLOPT_BINARYTRANSFER => true,
+
+			// we do not need the headers in the output, we get everything we need from curl_getinfo
+			CURLOPT_HEADER => false,
+			
 			// this both sets the method to HEAD and says not to return a body
 			CURLOPT_NOBODY => true,
 
@@ -146,10 +129,12 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 		));
 
 		// make the request
-		$responseBody = curl_exec($this->_curl);
+		$responseBody = curl_exec($curl);
 
 		// get info from the transfer
-		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation();
+		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation($curl);
+		
+		curl_close($curl);
 
 		return new Apache_Solr_HttpTransport_Response($statusCode, null, $responseBody, $contentType, $encoding);
 	}
@@ -163,11 +148,19 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 			$timeout = $this->getDefaultTimeout();
 		}
 
+		$curl = curl_init();
+		
 		// set curl POST options
-		curl_setopt_array($this->_curl, array(
-			// make sure we're returning the body
-			CURLOPT_NOBODY => false,
+		curl_setopt_array($curl, array(
+			// return the response body from curl_exec
+			CURLOPT_RETURNTRANSFER => true,
 
+			// get the output as binary data
+			CURLOPT_BINARYTRANSFER => true,
+
+			// we do not need the headers in the output, we get everything we need from curl_getinfo
+			CURLOPT_HEADER => false,
+			
 			// make sure we're POST
 			CURLOPT_POST => true,
 
@@ -185,10 +178,12 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 		));
 
 		// make the request
-		$responseBody = curl_exec($this->_curl);
+		$responseBody = curl_exec($curl);
 
 		// get info from the transfer
-		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation();
+		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation($curl);
+
+		curl_close($curl);
 
 		return new Apache_Solr_HttpTransport_Response($statusCode, null, $responseBody, $contentType, $encoding);
 	}
@@ -196,19 +191,20 @@ class Apache_Solr_HttpTransport_Curl extends Apache_Solr_HttpTransport_Abstract
 	/**
 	 * Get information from the last transfer
 	 *
+	 * @param resource $curl curl session handle
 	 * @return array (statusCode, mimetype, encoding)
 	 */
-	private function _getHeaderInformation()
+	private function _getHeaderInformation($curl)
 	{
 		// defaults
 		$type = 'text/plain';
 		$encoding = 'UTF-8';
 
 		// first get status code
-		$statusCode = curl_getinfo($this->_curl, CURLINFO_HTTP_CODE);
+		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
 		// get the content type
-		$contentTypeHeader = curl_getinfo($this->_curl, CURLINFO_CONTENT_TYPE);
+		$contentTypeHeader = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 
 		if ($contentTypeHeader)
 		{

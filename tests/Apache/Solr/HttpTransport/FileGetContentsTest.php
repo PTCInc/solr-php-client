@@ -75,7 +75,7 @@ class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTran
 	{
 		$this->ensureAllowUrlFopen();
 		
-		$fixture = new Apache_Solr_HttpTransport_FileGetContents();
+		$fixture = $this->getFixture();
 		$fixture->setDefaultTimeout(self::TIMEOUT);
 		
 		$response = $fixture->performGetRequest(self::GET_URL);
@@ -92,7 +92,7 @@ class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTran
 	{
 		$this->ensureAllowUrlFopen();
 		
-		$fixture = new Apache_Solr_HttpTransport_FileGetContents();
+		$fixture = $this->getFixture();
 		
 		$response = $fixture->performGetRequest(self::GET_URL, self::TIMEOUT);
 		
@@ -107,9 +107,8 @@ class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTran
 	public function testPerformHeadRequest()
 	{
 		$this->ensureAllowUrlFopen();
-		$this->ensureAllowUrlFopen();
 		
-		$fixture = new Apache_Solr_HttpTransport_FileGetContents();
+		$fixture = $this->getFixture();
 		$fixture->setDefaultTimeout(self::TIMEOUT);
 		
 		$response = $fixture->performHeadRequest(self::GET_URL);
@@ -126,9 +125,8 @@ class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTran
 	public function testPerformHeadRequestWithTimeout()
 	{
 		$this->ensureAllowUrlFopen();
-		$this->ensureAllowUrlFopen();
 		
-		$fixture = new Apache_Solr_HttpTransport_FileGetContents();
+		$fixture = $this->getFixture();
 		$response = $fixture->performHeadRequest(self::GET_URL, self::TIMEOUT);
 		
 		// we should get everything the same as a get, except the body
@@ -144,7 +142,7 @@ class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTran
 	{
 		$this->ensureAllowUrlFopen();
 		
-		$fixture = new Apache_Solr_HttpTransport_FileGetContents();
+		$fixture = $this->getFixture();
 		$fixture->setDefaultTimeout(self::TIMEOUT);
 		
 		$response = $fixture->performPostRequest(self::POST_URL, self::POST_DATA, self::POST_REQUEST_CONTENT_TYPE);
@@ -161,7 +159,7 @@ class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTran
 	{
 		$this->ensureAllowUrlFopen();
 		
-		$fixture = new Apache_Solr_HttpTransport_FileGetContents();
+		$fixture = $this->getFixture();
 		$response = $fixture->performPostRequest(self::POST_URL, self::POST_DATA, self::POST_REQUEST_CONTENT_TYPE, self::TIMEOUT);
 		
 		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
