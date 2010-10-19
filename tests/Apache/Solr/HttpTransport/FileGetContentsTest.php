@@ -40,133 +40,14 @@
  */
 class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTransport_AbstractTest
 {
-	const TIMEOUT = 2;
-	
-	// request our copyright file from googlecode for GET and HEAD
-	const GET_URL = "http://solr-php-client.googlecode.com/svn/trunk/COPYING";
-	const GET_RESPONSE_MIME_TYPE = 'text/plain';
-	const GET_RESPONSE_ENCODING = 'UTF-8';
-	const GET_RESPONSE_MATCH = 'Copyright (c) ';
-	
-	// post to the issue list page with a search for 'meh'
-	const POST_URL = "http://code.google.com/p/solr-php-client/issues/list";
-	const POST_DATA = "can=2&q=meh&colspec=ID+Type+Status+Priority+Milestone+Owner+Summary&cells=tiles";
-	const POST_REQUEST_CONTENT_TYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
-	
-	const POST_RESPONSE_MIME_TYPE = 'text/html';
-	const POST_RESPONSE_ENCODING = 'UTF-8';
-	//const POST_RESPONSE_MATCH = 'not sure';
-	
-	public function ensureAllowUrlFopen()
+	public function getFixture()
 	{
 		// make sure allow_url_fopen is on
 		if (!ini_get("allow_url_fopen"))
 		{
 			$this->markTestSkipped("allow_url_fopen is not enabled");
 		}
-	}
-	
-	public function getFixture()
-	{
+		
 		return new Apache_Solr_HttpTransport_FileGetContents();
-	}
-		
-	public function testPerformGetRequest()
-	{
-		$this->ensureAllowUrlFopen();
-		
-		$fixture = $this->getFixture();
-		$fixture->setDefaultTimeout(self::TIMEOUT);
-		
-		$response = $fixture->performGetRequest(self::GET_URL);
-		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
-		
-		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
-		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
-		$this->assertEquals(self::GET_RESPONSE_ENCODING, $response->getEncoding(), 'character encoding was not correct');
-		$this->assertStringStartsWith(self::GET_RESPONSE_MATCH, $response->getBody(), 'body did not start with match text');
-	}
-	
-	public function testPerformGetRequestWithTimeout()
-	{
-		$this->ensureAllowUrlFopen();
-		
-		$fixture = $this->getFixture();
-		
-		$response = $fixture->performGetRequest(self::GET_URL, self::TIMEOUT);
-		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
-		
-		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
-		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
-		$this->assertEquals(self::GET_RESPONSE_ENCODING, $response->getEncoding(), 'character encoding was not correct');
-		$this->assertStringStartsWith(self::GET_RESPONSE_MATCH, $response->getBody(), 'body did not start with match text');
-	}
-	
-	public function testPerformHeadRequest()
-	{
-		$this->ensureAllowUrlFopen();
-		
-		$fixture = $this->getFixture();
-		$fixture->setDefaultTimeout(self::TIMEOUT);
-		
-		$response = $fixture->performHeadRequest(self::GET_URL);
-		
-		// we should get everything the same as a get, except the body
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
-		
-		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
-		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
-		$this->assertEquals(self::GET_RESPONSE_ENCODING, $response->getEncoding(), 'character encoding was not correct');
-		$this->assertEquals("", $response->getBody(), 'body was not empty');
-	}
-	
-	public function testPerformHeadRequestWithTimeout()
-	{
-		$this->ensureAllowUrlFopen();
-		
-		$fixture = $this->getFixture();
-		$response = $fixture->performHeadRequest(self::GET_URL, self::TIMEOUT);
-		
-		// we should get everything the same as a get, except the body
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
-		
-		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
-		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
-		$this->assertEquals(self::GET_RESPONSE_ENCODING, $response->getEncoding(), 'character encoding was not correct');
-		$this->assertEquals("", $response->getBody(), 'body was not empty');
-	}
-	
-	public function testPerformPostRequest()
-	{
-		$this->ensureAllowUrlFopen();
-		
-		$fixture = $this->getFixture();
-		$fixture->setDefaultTimeout(self::TIMEOUT);
-		
-		$response = $fixture->performPostRequest(self::POST_URL, self::POST_DATA, self::POST_REQUEST_CONTENT_TYPE);
-		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
-		
-		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
-		$this->assertEquals(self::POST_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
-		$this->assertEquals(self::POST_RESPONSE_ENCODING, $response->getEncoding(), 'character encoding was not correct');
-		//$this->assertStringStartsWith(self::POST_RESPONSE_MATCH, $response->getBody(), 'body did not start with match text');
-	}
-	
-	public function testPerformPostRequestWithTimeout()
-	{
-		$this->ensureAllowUrlFopen();
-		
-		$fixture = $this->getFixture();
-		$response = $fixture->performPostRequest(self::POST_URL, self::POST_DATA, self::POST_REQUEST_CONTENT_TYPE, self::TIMEOUT);
-		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
-		
-		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
-		$this->assertEquals(self::POST_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
-		$this->assertEquals(self::POST_RESPONSE_ENCODING, $response->getEncoding(), 'character encoding was not correct');
-		//$this->assertStringStartsWith(self::POST_RESPONSE_MATCH, $response->getBody(), 'body did not start with match text');
 	}
 }
