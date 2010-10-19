@@ -172,11 +172,9 @@ class Apache_Solr_HttpTransport_FileGetContents extends Apache_Solr_HttpTranspor
 	
 	private function _getResponseFromParts($rawResponse, $httpHeaders)
 	{
-		//Assume 0, 'Communication Error', utf-8, and  text/plain
+		//Assume 0, false as defaults
 		$status = 0;
-		$statusMessage = 'Communication Error';
-		$type = 'text/plain';
-		$encoding = 'UTF-8';
+		$contentType = false;
 
 		//iterate through headers for real status, type, and encoding
 		if (is_array($httpHeaders) && count($httpHeaders) > 0)
@@ -193,11 +191,10 @@ class Apache_Solr_HttpTransport_FileGetContents extends Apache_Solr_HttpTranspor
 			//Thanks to Daniel Andersson for pointing out this oversight
 			while (isset($httpHeaders[0]) && substr($httpHeaders[0], 0, 4) == 'HTTP')
 			{
-				$parts = explode(' ', substr($httpHeaders[0], 9), 2);
+				// we can do a intval on status line without the "HTTP/1.X " to get the code
+				$status = intval(substr($httpHeaders[0], 9));
 
-				$status = $parts[0];
-				$statusMessage = trim($parts[1]);
-
+				// remove this from the headers so we can check for more
 				array_shift($httpHeaders);
 			}
 
@@ -205,29 +202,15 @@ class Apache_Solr_HttpTransport_FileGetContents extends Apache_Solr_HttpTranspor
 			//and encoding from it (if possible - such as 'Content-Type: text/plain; charset=UTF-8')
 			foreach ($httpHeaders as $header)
 			{
+				// look for the header that starts appropriately
 				if (strncasecmp($header, 'Content-Type:', 13) == 0)
 				{
-					//split content type value into two parts if possible
-					$parts = explode(';', substr($header, 13), 2);
-
-					$type = trim($parts[0]);
-
-					if (isset($parts[1]) && strlen($parts[1]) > 0)
-					{
-						//split the encoding section again to get the value
-						$parts = explode('=', $parts[1], 2);
-
-						if (isset($parts[1]) && strlen($parts[1] > 0))
-						{
-							$encoding = trim($parts[1]);
-						}
-					}
-
+					$contentType = substr($header, 13);
 					break;
 				}
 			}
 		}
 		
-		return new Apache_Solr_HttpTransport_Response($status, $statusMessage, $rawResponse, $type, $encoding);
+		return new Apache_Solr_HttpTransport_Response($status, $contentType, $rawResponse);
 	}
 }

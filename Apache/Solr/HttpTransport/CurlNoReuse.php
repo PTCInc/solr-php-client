@@ -89,11 +89,13 @@ class Apache_Solr_HttpTransport_CurlNoReuse extends Apache_Solr_HttpTransport_Ab
 		$responseBody = curl_exec($curl);
 
 		// get info from the transfer
-		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation($curl);
+		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		$contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 		
+		// close our curl session - we're done with it
 		curl_close($curl);
 
-		return new Apache_Solr_HttpTransport_Response($statusCode, null, $responseBody, $contentType, $encoding);
+		return new Apache_Solr_HttpTransport_Response($statusCode, $contentType, $responseBody);
 	}
 
 	public function performHeadRequest($url, $timeout = false)
@@ -132,11 +134,13 @@ class Apache_Solr_HttpTransport_CurlNoReuse extends Apache_Solr_HttpTransport_Ab
 		$responseBody = curl_exec($curl);
 
 		// get info from the transfer
-		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation($curl);
+		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		$contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 		
+		// close our curl session - we're done with it
 		curl_close($curl);
 
-		return new Apache_Solr_HttpTransport_Response($statusCode, null, $responseBody, $contentType, $encoding);
+		return new Apache_Solr_HttpTransport_Response($statusCode, $contentType, $responseBody);
 	}
 
 	public function performPostRequest($url, $postData, $contentType, $timeout = false)
@@ -181,53 +185,12 @@ class Apache_Solr_HttpTransport_CurlNoReuse extends Apache_Solr_HttpTransport_Ab
 		$responseBody = curl_exec($curl);
 
 		// get info from the transfer
-		list($statusCode, $contentType, $encoding) = $this->_getHeaderInformation($curl);
+		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		$contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 
+		// close our curl session - we're done with it
 		curl_close($curl);
 
-		return new Apache_Solr_HttpTransport_Response($statusCode, null, $responseBody, $contentType, $encoding);
-	}
-
-	/**
-	 * Get information from the last transfer
-	 *
-	 * @param resource $curl curl session handle
-	 * @return array (statusCode, mimetype, encoding)
-	 */
-	private function _getHeaderInformation($curl)
-	{
-		// defaults
-		$type = 'text/plain';
-		$encoding = 'UTF-8';
-
-		// first get status code
-		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-		// get the content type
-		$contentTypeHeader = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-
-		if ($contentTypeHeader)
-		{
-			// now break apart the header to see if there's character encoding
-			$contentTypeParts = explode(';', $contentTypeHeader, 2);
-
-			if (isset($contentTypeParts[0]))
-			{
-				$type = trim($contentTypeParts[0]);
-			}
-
-			if (isset($contentTypeParts[1]))
-			{
-				// we have a second part, split it further
-				$contentTypeParts = explode('=', $contentTypeParts[1]);
-
-				if (isset($contentTypeParts[1]))
-				{
-					$encoding = trim($contentTypeParts[1]);
-				}
-			}
-		}
-
-		return array($statusCode, $type, $encoding);
+		return new Apache_Solr_HttpTransport_Response($statusCode, $contentType, $responseBody);
 	}
 }

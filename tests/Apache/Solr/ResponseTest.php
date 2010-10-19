@@ -86,8 +86,8 @@ class Apache_Solr_ResponseTest extends PHPUnit_Framework_TestCase
 
 		// check that our defaults are correct
 		$this->assertEquals(0, $fixture->getHttpStatus());
-		$this->assertEquals("", $fixture->getEncoding());
-		$this->assertEquals("", $fixture->getType());
+		$this->assertEquals("UTF-8", $fixture->getEncoding());
+		$this->assertEquals("text/plain", $fixture->getType());
 	}
 
 	public function testMagicGetWithValidBodyAndHeaders()

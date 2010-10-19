@@ -159,26 +159,48 @@ class Apache_Solr_HttpTransport_Response
 	/**
 	 * Construct a HTTP transport response
 	 * 
-	 * @param integer $statusCode
-	 * @param string $statusMessage
-	 * @param string $responseBody
-	 * @param string $mimeType
-	 * @param string $encoding
+	 * @param integer $statusCode The HTTP status code
+	 * @param string $contentType The VALUE of the Content-Type HTTP header
+	 * @param string $responseBody The body of the HTTP response
 	 */
-	public function __construct($statusCode, $statusMessage, $responseBody, $mimeType, $encoding)
+	public function __construct($statusCode, $contentType, $responseBody)
 	{
+		// set the status code, make sure its an integer
 		$this->_statusCode = (int) $statusCode;
 		
-		if (empty($statusMessage))
-		{
-			// lookup up status message based on code
-			$statusMessage = self::getDefaultStatusMessage($statusCode);	
-		}
+		// lookup up status message based on code
+		$this->_statusMessage = self::getDefaultStatusMessage($this->_statusCode);
 		
-		$this->_statusMessage = (string) $statusMessage;
+		// set the response body, it should always be a string
 		$this->_responseBody = (string) $responseBody;
-		$this->_mimeType = (string) $mimeType;
-		$this->_encoding = (string) $encoding;
+		
+		// parse the content type header value for mimetype and encoding
+		// first set default values that will remain if we can't find
+		// what we're looking for in the content type
+		$this->_mimeType = "text/plain";
+		$this->_encoding = "UTF-8";
+		
+		if ($contentType)
+		{
+			// now break apart the header to see if there's character encoding
+			$contentTypeParts = explode(';', $contentType, 2);
+
+			if (isset($contentTypeParts[0]))
+			{
+				$this->_mimeType = trim($contentTypeParts[0]);
+			}
+
+			if (isset($contentTypeParts[1]))
+			{
+				// we have a second part, split it further
+				$contentTypeParts = explode('=', $contentTypeParts[1]);
+
+				if (isset($contentTypeParts[1]))
+				{
+					$this->_encoding = trim($contentTypeParts[1]);
+				}
+			}
+		}
 	}
 	
 	/**
