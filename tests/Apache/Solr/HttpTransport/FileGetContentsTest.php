@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  *
  * @package Apache
@@ -36,23 +36,18 @@
  */
 
 /**
- * Test Suite for all Apache_Solr_Service package classes
+ * Apache_Solr_HttpTransport_FileGetContents Unit Tests
  */
-class Apache_Solr_Service_TestAll extends PHPUnit_Framework_TestSuite
+class Apache_Solr_HttpTransport_FileGetContentsTest extends Apache_Solr_HttpTransport_AbstractTest
 {
-	/**
-	 * Create the test suite instance
-	 *
-	 * @return PHPUnit_Framework_TestSuite
-	 */
-	public static function suite()
+	public function getFixture()
 	{
-		// create test suite
-		$suite = new Apache_Solr_Service_TestAll('Run all Service Balancer tests');
-
-		// individual test cases under Apache/Solr/Service
-		$suite->addTestSuite('Apache_Solr_Service_BalancerTest');
-
-		return $suite;
+		// make sure allow_url_fopen is on
+		if (!ini_get("allow_url_fopen"))
+		{
+			$this->markTestSkipped("allow_url_fopen is not enabled");
+		}
+		
+		return new Apache_Solr_HttpTransport_FileGetContents();
 	}
 }

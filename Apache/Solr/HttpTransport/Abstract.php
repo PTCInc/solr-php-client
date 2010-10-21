@@ -1,4 +1,3 @@
-#! /usr/bin/php
 <?php
 /**
  * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
@@ -27,16 +26,64 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
+ * @version $Id: $
+ *
+ * @package Apache
+ * @subpackage Solr
+ * @author Timo Schmidt <timo.schmidt@aoemedia.de>, Donovan Jimenez <djimenez@conduit-it.com>
  */
 
-// make sure the working directory is correct (parent directory)
-// phpunit will use it to include our configuration files and find
-// the following specified test suite
-chdir(dirname(__FILE__));
+/**
+ * Convenience class that implements the transport implementation. Can be extended by
+ * real implementations to do some of the common book keeping
+ */
+abstract class Apache_Solr_HttpTransport_Abstract implements Apache_Solr_HttpTransport_Interface
+{	
+	/**
+	 * Our default timeout value for requests that don't specify a timeout
+	 *
+	 * @var float
+	 */
+	private $_defaultTimeout = false;
+		
+	/**
+	 * Get the current default timeout setting (initially the default_socket_timeout ini setting)
+	 * in seconds
+	 *
+	 * @return float
+	 */
+	public function getDefaultTimeout()
+	{
+		// lazy load the default timeout from the ini settings
+		if ($this->_defaultTimeout === false)
+		{
+			$this->_defaultTimeout = (int) ini_get('default_socket_timeout');
 
-// run phpunit - will automatically use ./phpunit.xml for configuration
-// that configuration file points to a bootstrap that will include our test suite
-passthru("phpunit .");
-
-// extra newline so our next prompt isn't stuck appended to the output
-echo "\n";
+			// double check we didn't get 0 for a timeout
+			if ($this->_defaultTimeout <= 0)
+			{
+				$this->_defaultTimeout = 60;
+			}
+		}
+		
+		return $this->_defaultTimeout;
+	}
+	
+	/**
+	 * Set the current default timeout for all HTTP requests
+	 *
+	 * @param float $timeout
+	 */
+	public function setDefaultTimeout($timeout)
+	{
+		$timeout = (float) $timeout;
+		
+		if ($timeout >= 0)
+		{
+			$this->_defaultTimeout = $timeout;
+		}
+	}	
+}

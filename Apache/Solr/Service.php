@@ -38,14 +38,14 @@
 
 // See Issue #1 (http://code.google.com/p/solr-php-client/issues/detail?id=1)
 // Doesn't follow typical include path conventions, but is more convenient for users
-require_once(dirname(__FILE__) . '/Document.php');
-require_once(dirname(__FILE__) . '/Response.php');
-
 require_once(dirname(__FILE__) . '/Exception.php');
 require_once(dirname(__FILE__) . '/HttpTransportException.php');
 require_once(dirname(__FILE__) . '/InvalidArgumentException.php');
-require_once(dirname(__FILE__) . '/NoServiceAvailableException.php');
-require_once(dirname(__FILE__) . '/ParserException.php');
+
+require_once(dirname(__FILE__) . '/Document.php');
+require_once(dirname(__FILE__) . '/Response.php');
+
+require_once(dirname(__FILE__) . '/HttpTransport/Interface.php');
 
 /**
  * Starting point for the Solr API. Represents a Solr server resource and has
@@ -175,18 +175,11 @@ class Apache_Solr_Service
 	protected $_urlsInited = false;
 
 	/**
-	 * Reusable stream context resources for GET and POST operations
+	 * HTTP Transport implementation (pluggable)
 	 *
-	 * @var resource
+	 * @var Apache_Solr_HttpTransport_Interface
 	 */
-	protected $_getContext, $_postContext;
-
-	/**
-	 * Default HTTP timeout when one is not specified (initialized to default_socket_timeout ini setting)
-	 *
-	 * var float
-	 */
-	protected $_defaultTimeout;
+	protected $_httpTransport = false;
 
 	/**
 	 * Escape a value for special query characters such as ':', '(', ')', '*', '?', etc.
@@ -237,8 +230,9 @@ class Apache_Solr_Service
 	 * @param string $host
 	 * @param string $port
 	 * @param string $path
+	 * @param Apache_Solr_HttpTransport_Interface $httpTransport
 	 */
-	public function __construct($host = 'localhost', $port = 8180, $path = '/solr/')
+	public function __construct($host = 'localhost', $port = 8180, $path = '/solr/', $httpTransport = false)
 	{
 		$this->setHost($host);
 		$this->setPort($port);
@@ -246,17 +240,9 @@ class Apache_Solr_Service
 
 		$this->_initUrls();
 
-		// create our shared get and post stream contexts
-		$this->_getContext = stream_context_create();
-		$this->_postContext = stream_context_create();
-
-		// determine our default http timeout from ini settings
-		$this->_defaultTimeout = (int) ini_get('default_socket_timeout');
-
-		// double check we didn't get 0 for a timeout
-		if ($this->_defaultTimeout <= 0)
+		if ($httpTransport)
 		{
-			$this->_defaultTimeout = 60;
+			$this->setHttpTransport($httpTransport);
 		}
 
 		// check that our php version is >= 5.1.3 so we can correct for http_build_query behavior later
@@ -342,34 +328,17 @@ class Apache_Solr_Service
 	 */
 	protected function _sendRawGet($url, $timeout = FALSE)
 	{
-		// set the timeout if specified
-		if ($timeout !== FALSE && $timeout > 0.0)
-		{
-			// timeouts with file_get_contents seem to need
-			// to be halved to work as expected
-			$timeout = (float) $timeout / 2;
+		$httpTransport = $this->getHttpTransport();
 
-			stream_context_set_option($this->_getContext, 'http', 'timeout', $timeout);
-		}
-		else
+		$httpResponse = $httpTransport->performGetRequest($url, $timeout);
+		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
+
+		if ($solrResponse->getHttpStatus() != 200)
 		{
-			// use the default timeout pulled from default_socket_timeout otherwise
-			stream_context_set_option($this->_getContext, 'http', 'timeout', $this->_defaultTimeout);
+			throw new Apache_Solr_HttpTransportException($solrResponse);
 		}
 
-		// $http_response_header will be updated by the call to file_get_contents later
-		// see http://us.php.net/manual/en/wrappers.http.php for documentation
-		// Unfortunately, it will still create a notice in analyzers if we don't set it here
-		$http_response_header = null;
-
-		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_getContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
-
-		if ($response->getHttpStatus() != 200)
-		{
-			throw new Apache_Solr_HttpTransportException($response);
-		}
-
-		return $response;
+		return $solrResponse;
 	}
 
 	/**
@@ -385,46 +354,17 @@ class Apache_Solr_Service
 	 */
 	protected function _sendRawPost($url, $rawPost, $timeout = FALSE, $contentType = 'text/xml; charset=UTF-8')
 	{
-		stream_context_set_option($this->_postContext, array(
-				'http' => array(
-					// set HTTP method
-					'method' => 'POST',
+		$httpTransport = $this->getHttpTransport();
 
-					// Add our posted content type
-					'header' => "Content-Type: $contentType",
+		$httpResponse = $httpTransport->performPostRequest($url, $rawPost, $contentType, $timeout);
+		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
-					// the posted content
-					'content' => $rawPost,
-
-					// default timeout
-					'timeout' => $this->_defaultTimeout
-				)
-			)
-		);
-
-		// set the timeout if specified
-		if ($timeout !== FALSE && $timeout > 0.0)
+		if ($solrResponse->getHttpStatus() != 200)
 		{
-			// timeouts with file_get_contents seem to need
-			// to be halved to work as expected
-			$timeout = (float) $timeout / 2;
-
-			stream_context_set_option($this->_postContext, 'http', 'timeout', $timeout);
+			throw new Apache_Solr_HttpTransportException($solrResponse);
 		}
 
-		// $http_response_header will be updated by the call to file_get_contents later
-		// see http://us.php.net/manual/en/wrappers.http.php for documentation
-		// Unfortunately, it will still create a notice in analyzers if we don't set it here
-		$http_response_header = null;
-
-		$response = new Apache_Solr_Response(@file_get_contents($url, false, $this->_postContext), $http_response_header, $this->_createDocuments, $this->_collapseSingleValueArrays);
-
-		if ($response->getHttpStatus() != 200)
-		{
-			throw new Apache_Solr_HttpTransportException($response);
-		}
-
-		return $response;
+		return $solrResponse;
 	}
 
 	/**
@@ -527,6 +467,34 @@ class Apache_Solr_Service
 	}
 
 	/**
+	 * Get the current configured HTTP Transport
+	 *
+	 * @return HttpTransportInterface
+	 */
+	public function getHttpTransport()
+	{
+		// lazy load a default if one has not be set
+		if ($this->_httpTransport === false)
+		{
+			require_once(dirname(__FILE__) . '/HttpTransport/FileGetContents.php');
+
+			$this->_httpTransport = new Apache_Solr_HttpTransport_FileGetContents();
+		}
+
+		return $this->_httpTransport;
+	}
+
+	/**
+	 * Set the HTTP Transport implemenation that will be used for all HTTP requests
+	 *
+	 * @param Apache_Solr_HttpTransport_Interface
+	 */
+	public function setHttpTransport(Apache_Solr_HttpTransport_Interface $httpTransport)
+	{
+		$this->_httpTransport = $httpTransport;
+	}
+
+	/**
 	 * Set the create documents flag. This determines whether {@link Apache_Solr_Response} objects will
 	 * parse the response and create {@link Apache_Solr_Document} instances in place.
 	 *
@@ -572,25 +540,24 @@ class Apache_Solr_Service
 	 * in seconds
 	 *
 	 * @return float
+	 *
+	 * @deprecated Use the getDefaultTimeout method on the HTTP transport implementation
 	 */
 	public function getDefaultTimeout()
 	{
-		return $this->_defaultTimeout;
+		return $this->getHttpTransport()->getDefaultTimeout();
 	}
 
 	/**
 	 * Set the default timeout for all calls that aren't passed a specific timeout
 	 *
 	 * @param float $timeout Timeout value in seconds
+	 *
+	 * @deprecated Use the setDefaultTimeout method on the HTTP transport implementation
 	 */
 	public function setDefaultTimeout($timeout)
 	{
-		$timeout = floatval($timeout);
-
-		if ($timeout >= 0)
-		{
-			$this->_defaultTimeout = $timeout;
-		}
+		$this->getHttpTransport()->setDefaultTimeout($timeout);
 	}
 
 	/**
@@ -627,7 +594,6 @@ class Apache_Solr_Service
 		return $this->_namedListTreatment;
 	}
 
-
 	/**
 	 * Set the string used to separate the path form the query string.
 	 * Defaulted to '?'
@@ -660,31 +626,13 @@ class Apache_Solr_Service
 	public function ping($timeout = 2)
 	{
 		$start = microtime(true);
+		
+		$httpTransport = $this->getHttpTransport();
 
-		// when using timeout in context and file_get_contents
-		// it seems to take twice the timout value
-		$timeout = (float) $timeout / 2;
+		$httpResponse = $httpTransport->performHeadRequest($this->_pingUrl, $timeout);
+		$solrResponse = new Apache_Solr_Response($httpResponse, $this->_createDocuments, $this->_collapseSingleValueArrays);
 
-		if ($timeout <= 0.0)
-		{
-			$timeout = -1;
-		}
-
-		$context = stream_context_create(
-			array(
-				'http' => array(
-					'method' => 'HEAD',
-					'timeout' => $timeout
-				)
-			)
-		);
-
-		// attempt a HEAD request to the solr ping page
-		$ping = @file_get_contents($this->_pingUrl, false, $context);
-
-		// result is false if there was a timeout
-		// or if the HTTP status was not 200
-		if ($ping !== false)
+		if ($solrResponse->getHttpStatus() == 200)
 		{
 			return microtime(true) - $start;
 		}
@@ -990,7 +938,7 @@ class Apache_Solr_Service
 	public function extract($file, $params = array(), $document = null, $mimetype = 'application/octet-stream')
 	{
 		// read the contents of the file
-		$contents = file_get_contents($file);
+		$contents = @file_get_contents($file);
 
 		if ($contents !== false)
 		{
@@ -1039,13 +987,12 @@ class Apache_Solr_Service
 			// params will be sent to SOLR in the QUERY STRING
 			$queryString = $this->_generateQueryString($params);
 
-
-			// the file contents will be sent to SOLR as the POST BODY - we use application/octect-stream
+			// the file contents will be sent to SOLR as the POST BODY - we use application/octect-stream as default mimetype
 			return $this->_sendRawPost($this->_extractUrl . $this->_queryDelimiter . $queryString, $contents, false, $mimetype);
 		}
 		else
 		{
-			throw new Apache_Solr_InvalidArgumentException("Could not retrieve content from file '{$file}'");
+			throw new Apache_Solr_InvalidArgumentException("File '{$file}' is empty or could not be read");
 		}
 	}
 
@@ -1085,11 +1032,20 @@ class Apache_Solr_Service
 	 */
 	public function search($query, $offset = 0, $limit = 10, $params = array(), $method = self::METHOD_GET)
 	{
-		if (!is_array($params))
+		// ensure params is an array
+		if (!is_null($params))
+		{
+			if (!is_array($params))
+			{
+				// params was specified but was not an array - invalid
+				throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
+			}
+		}
+		else
 		{
 			$params = array();
 		}
-
+		
 		// construct our full parameters
 
 		// common parameters in this interface

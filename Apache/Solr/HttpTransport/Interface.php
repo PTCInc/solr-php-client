@@ -29,19 +29,66 @@
  *
  * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
+ * @version $Id: $
  *
  * @package Apache
  * @subpackage Solr
- * @author Donovan Jimenez <djimenez@conduit-it.com>
+ * @author Timo Schmidt <timo.schmidt@aoemedia.de>, Donovan Jimenez <djimenez@conduit-it.com>
  */
 
+// require Apache_Solr_HttpTransport_Response
+require_once(dirname(__FILE__) . '/Response.php');
+
 /**
- * Apache_Solr_Service_Balancer Unit Tests
+ * Interface that all Transport (HTTP Requester) implementations must implement. These
+ * Implementations can then be plugged into the Service instance in order to user their
+ * the desired method for making HTTP requests
  */
-class Apache_Solr_Service_BalancerTest extends Apache_Solr_ServiceAbstractTest
+interface Apache_Solr_HttpTransport_Interface
 {
-	public function getFixture()
-	{
-		return new Apache_Solr_Service_Balancer();
-	}
+	/**
+	 * Get the current default timeout for all HTTP requests
+	 *
+	 * @return float
+	 */
+	public function getDefaultTimeout();
+	
+	/**
+	 * Set the current default timeout for all HTTP requests
+	 *
+	 * @param float $timeout
+	 */
+	public function setDefaultTimeout($timeout);
+		
+	/**
+	 * Perform a GET HTTP operation with an optional timeout and return the response
+	 * contents, use getLastResponseHeaders to retrieve HTTP headers
+	 *
+	 * @param string $url
+	 * @param float $timeout
+	 * @return Apache_Solr_HttpTransport_Response HTTP response
+	 */
+	public function performGetRequest($url, $timeout = false);
+	
+	/**
+	 * Perform a HEAD HTTP operation with an optional timeout and return the response
+	 * headers - NOTE: head requests have no response body
+	 *
+	 * @param string $url
+	 * @param float $timeout
+	 * @return Apache_Solr_HttpTransport_Response HTTP response
+	 */
+	public function performHeadRequest($url, $timeout = false);
+	
+	/**
+	 * Perform a POST HTTP operation with an optional timeout and return the response
+	 * contents, use getLastResponseHeaders to retrieve HTTP headers
+	 *
+	 * @param string $url
+	 * @param string $rawPost
+	 * @param string $contentType
+	 * @param float $timeout
+	 * @return Apache_Solr_HttpTransport_Response HTTP response
+	 */
+	public function performPostRequest($url, $rawPost, $contentType, $timeout = false);
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  *
  * @package Apache
@@ -109,6 +109,14 @@ class Apache_Solr_DocumentTest extends PHPUnit_Framework_TestCase
 
 		// test the __get value
 		$this->assertEquals($value, $this->_fixture->{$field});
+	}
+	
+	/**
+	 * Added for issue #48 (http://code.google.com/p/solr-php-client/issues/detail?id=48)
+	 */
+	public function testMagicGetReturnsNullForNonExistentField()
+	{
+		$this->assertNull($this->_fixture->nonExistent);
 	}
 
 	public function testMagicSetForFieldValues()

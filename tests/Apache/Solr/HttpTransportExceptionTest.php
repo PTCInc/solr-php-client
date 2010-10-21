@@ -1,4 +1,3 @@
-#! /usr/bin/php
 <?php
 /**
  * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
@@ -27,16 +26,33 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
+ *
+ * @package Apache
+ * @subpackage Solr
+ * @author Donovan Jimenez <djimenez@conduit-it.com>
  */
 
-// make sure the working directory is correct (parent directory)
-// phpunit will use it to include our configuration files and find
-// the following specified test suite
-chdir(dirname(__FILE__));
-
-// run phpunit - will automatically use ./phpunit.xml for configuration
-// that configuration file points to a bootstrap that will include our test suite
-passthru("phpunit .");
-
-// extra newline so our next prompt isn't stuck appended to the output
-echo "\n";
+/**
+ * Apache_Solr_HttpTransportException Unit Tests
+ */
+class Apache_Solr_HttpTransportExceptionTest extends PHPUnit_Framework_TestCase
+{
+	/**
+	 * @expectedException PHPUnit_Framework_Error
+	 */
+	public function testConstructorRequiresResponse()
+	{
+		$fixture = new Apache_Solr_HttpTransportException();
+	}
+	
+	public function testGetResponse()
+	{
+		$response = Apache_Solr_ResponseTest::get0Response();
+		$fixture = new Apache_Solr_HttpTransportException($response);
+		
+		$this->assertEquals($response, $fixture->getResponse());
+	}
+}

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2009, Conduit Internet Technologies, Inc.
+ * Copyright (c) 2007-2010, Conduit Internet Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2009 Conduit Internet Technologies, Inc. (http://conduit-it.com)
+ * @copyright Copyright 2007-2010 Conduit Internet Technologies, Inc. (http://conduit-it.com)
  * @license New BSD (http://solr-php-client.googlecode.com/svn/trunk/COPYING)
  *
  * @package Apache
@@ -36,28 +36,18 @@
  */
 
 /**
- * Test Suite for all Apache_Solr package classes and sub sub packages
+ * Apache_Solr_HttpTransport_CurlNoReuse Unit Tests
  */
-class Apache_Solr_TestAll extends PHPUnit_Framework_TestSuite
+class Apache_Solr_HttpTransport_CurlNoReuseTest extends Apache_Solr_HttpTransport_AbstractTest
 {
-	/**
-	 * Create the test suite instance
-	 *
-	 * @return PHPUnit_Framework_TestSuite
-	 */
-	public static function suite()
+	public function getFixture()
 	{
-		// create test suite
-		$suite = new Apache_Solr_TestAll('Run all PHP Solr Client tests');
-
-		// individual test cases under Apache/Solr
-		$suite->addTestSuite('Apache_Solr_DocumentTest');
-		$suite->addTestSuite('Apache_Solr_ResponseTest');
-		//$suite->addTestSuite('Apache_Solr_ServiceTest');
-
-		// test suites under Apache/Solr/Service
-		//$suite->addTest(Apache_Solr_Service_TestAll::suite());
-
-		return $suite;
+		// ensure curl is enabled
+		if (!extension_loaded('curl'))
+		{
+			$this->markTestSkipped("curl module is not enabled");
+		}
+		
+		return new Apache_Solr_HttpTransport_CurlNoReuse();
 	}
 }

@@ -2,15 +2,13 @@
 <phpunit bootstrap="phpunit.bootstrap.inc" colors="true">
 	<logging>
 		<log type="coverage-html" target="coverage-report" charset="UTF-8"/>
-		<log type="testdox-text" target="testdox.txt" charset="UTF-8"/>
+		<!--<log type="testdox-text" target="testdox.txt" charset="UTF-8"/>-->
 	</logging>
 	<filter>
 		<whitelist>
-			<directory suffix=".php">../</directory>
+			<directory suffix=".php">../Apache</directory>
 			<exclude>
 				<file>./run.php</file>
-				<directory suffix="Test.php">./</directory>
-				<directory suffix="TestAll.php">./</directory>
 			</exclude>
 		</whitelist>
 	</filter>
