@@ -136,5 +136,4 @@ abstract class Apache_Solr_ServiceAbstractTest extends PHPUnit_Framework_TestCas
 		
 		$this->assertFalse($fixture->getCreateDocuments());
 	}
-	
 }

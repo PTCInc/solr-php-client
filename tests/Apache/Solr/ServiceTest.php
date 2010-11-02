@@ -59,7 +59,6 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		);
 	}
 	
-	
 	//================================================================//
 	// ATTEMPT TO MOVE THESE TO ServiceAbstractTest AT SOME POINT     //
 	//   Apache_Solr_Service_Balancer will need functions added       //
@@ -644,7 +643,7 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		$fixture->deleteByQuery("*:*");
 	}
 	
-	public function testExtract()
+	public function testExtracts()
 	{
 		$extractFile = __FILE__;
 		
@@ -684,7 +683,23 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		$fixture->extract($extractFile, "invalid");
 	}
 	
-	public function testExtractWithNullParams()
+	/**
+	 * @expectedException Apache_Solr_InvalidArgumentException
+	 */
+	public function testExtractFromStringWithInvalidParams()
+	{
+		$extractFileData = "does not matter what it is";
+		
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+
+		$fixture = new Apache_Solr_Service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$fixture->extractFromString($extractFileData, "invalid");
+	}
+	
+	public function testExtractsWithNullParams()
 	{
 		$extractFile = __FILE__;
 		
@@ -724,7 +739,7 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		$fixture->extract($extractFile);
 	}
 	
-	public function testExtractWithDocument()
+	public function testExtractsWithDocument()
 	{
 		$extractFile = __FILE__;
 		
