@@ -693,12 +693,54 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		// setup expected call and response
 		$mockTransport->expects($this->once())
 			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+				
+				// raw post
+				$this->equalTo('<commit expungeDeletes="false" waitFlush="true" waitSearcher="true" />'),
+				
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+				
+				// timeout
+				$this->equalTo(3600)
+			)
 			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
 		
 		$fixture = new Apache_Solr_Service();
 		$fixture->setHttpTransport($mockTransport);
 		
 		$fixture->commit();
+	}
+	
+	public function testCommitWithNonDefaultParameters()
+	{
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+		
+		// setup expected call and response
+		$mockTransport->expects($this->once())
+			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+				
+				// raw post
+				$this->equalTo('<commit expungeDeletes="true" waitFlush="false" waitSearcher="false" />'),
+				
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+				
+				// timeout
+				$this->equalTo(7200)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$fixture = new Apache_Solr_Service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$fixture->commit(true, false, false, 7200);
 	}
 	
 	public function testDelete()
