@@ -454,6 +454,19 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		// setup expected call and response
 		$mockTransport->expects($this->once())
 			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+				
+				// raw post
+				$this->equalTo('<add allowDups="false" overwritePending="true" overwriteCommitted="true"><doc></doc></add>'),
+				
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+				
+				// timeout
+				$this->equalTo(false)
+			)
 			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
 		
 		$fixture = new Apache_Solr_service();
@@ -464,6 +477,37 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		$fixture->addDocument($document);
 	}
 	
+	public function testAddDocumentWithNonDefaultParameters()
+	{
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+		
+		// setup expected call and response
+		$mockTransport->expects($this->once())
+			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+				
+				// raw post
+				$this->equalTo('<add allowDups="true" overwritePending="false" overwriteCommitted="false" commitWithin="3600"><doc></doc></add>'),
+				
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+				
+				// timeout
+				$this->equalTo(false)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$fixture = new Apache_Solr_service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$document = new Apache_Solr_Document();
+		
+		$fixture->addDocument($document, true, false, false, 3600);
+	}
+	
 	public function testAddDocumentWithFields()
 	{
 		// set a mock transport
@@ -472,6 +516,19 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		// setup expected call and response
 		$mockTransport->expects($this->once())
 			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+			
+				// raw post
+				$this->equalTo('<add allowDups="false" overwritePending="true" overwriteCommitted="true"><doc><field name="guid">global unique id</field><field name="field">value</field><field name="multivalue">value 1</field><field name="multivalue">value 2</field></doc></add>'),
+			
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+			
+				// timeout
+				$this->equalTo(false)
+			)
 			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
 		
 		$fixture = new Apache_Solr_service();
@@ -494,6 +551,19 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		// setup expected call and response
 		$mockTransport->expects($this->once())
 			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+		
+				// raw post
+				$this->equalTo('<add allowDups="false" overwritePending="true" overwriteCommitted="true"><doc><field name="guid">global unique id</field><field name="field" boost="2">value</field><field name="multivalue" boost="3">value 1</field><field name="multivalue">value 2</field></doc></add>'),
+		
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+		
+				// timeout
+				$this->equalTo(false)
+			)
 			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
 		
 		$fixture = new Apache_Solr_service();
@@ -520,6 +590,19 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		// setup expected call and response
 		$mockTransport->expects($this->once())
 			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+		
+				// raw post
+				$this->equalTo('<add allowDups="false" overwritePending="true" overwriteCommitted="true"><doc boost="2"><field name="guid">global unique id</field><field name="field">value</field></doc></add>'),
+		
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+		
+				// timeout
+				$this->equalTo(false)
+			)
 			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
 		
 		$fixture = new Apache_Solr_service();
@@ -542,6 +625,19 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		// setup expected call and response
 		$mockTransport->expects($this->once())
 			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+		
+				// raw post
+				$this->equalTo('<add allowDups="false" overwritePending="true" overwriteCommitted="true"><doc></doc><doc></doc></add>'),
+		
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+		
+				// timeout
+				$this->equalTo(false)
+			)
 			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
 		
 		$fixture = new Apache_Solr_service();
@@ -553,6 +649,40 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		);
 		
 		$fixture->addDocuments($documents);
+	}
+	
+	public function testAddDocumentsWithNonDefaultParameters()
+	{
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+		
+		// setup expected call and response
+		$mockTransport->expects($this->once())
+			->method('performPostRequest')
+			->with(
+				// url
+				$this->equalTo('http://localhost:8180/solr/update?wt=json'),
+				
+				// raw post
+				$this->equalTo('<add allowDups="true" overwritePending="false" overwriteCommitted="false" commitWithin="3600"><doc></doc><doc></doc></add>'),
+				
+				// content type
+				$this->equalTo('text/xml; charset=UTF-8'),
+				
+				// timeout
+				$this->equalTo(false)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$fixture = new Apache_Solr_service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$documents = array(
+			new Apache_Solr_Document(),
+			new Apache_Solr_Document()
+		);
+		
+		$fixture->addDocuments($documents, true, false, false, 3600);
 	}
 	
 	public function testCommit()
