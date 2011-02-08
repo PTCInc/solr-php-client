@@ -943,28 +943,30 @@ class Apache_Solr_Service
 	 */
 	public function extract($file, $params = array(), $document = null, $mimetype = 'application/octet-stream')
 	{
+		// check if $params is an array (allow null for default empty array)
+		if (!is_null($params))
+		{
+			if (!is_array($params))
+			{
+				throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
+			}
+		}
+		else
+		{
+			$params = array();
+		}
+		
+		// if $file is an http request, defer to extractFromUrl instead
+		if (substr($file, 0, 7) == 'http://' || substr($file, 0, 8) == 'https://')
+		{
+			return $this->extractFromUrl($file, $params, $document, $mimetype);
+		}
+		
 		// read the contents of the file
 		$contents = @file_get_contents($file);
 
 		if ($contents !== false)
 		{
-			// check if $params is an array (allow null for default empty array)
-			if (!is_null($params))
-			{
-				if (!is_array($params))
-				{
-					throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
-				}
-			}
-			else
-			{
-				$params = array();
-			}
-			
-			// make sure we receive our response in JSON and have proper name list treatment
-			$params['wt'] = self::SOLR_WRITER;
-			$params['json.nl'] = $this->_namedListTreatment;
-			
 			// add the resource.name parameter if not specified
 			if (!isset($params['resource.name']))
 			{
@@ -1043,6 +1045,62 @@ class Apache_Solr_Service
 
 		// the file contents will be sent to SOLR as the POST BODY - we use application/octect-stream as default mimetype
 		return $this->_sendRawPost($this->_extractUrl . $this->_queryDelimiter . $queryString, $data, false, $mimetype);
+	}
+	
+	/**
+	 * Use Solr Cell to extract document contents. See {@link http://wiki.apache.org/solr/ExtractingRequestHandler} for information on how
+	 * to use Solr Cell and what parameters are available.
+	 *
+	 * NOTE: when passing an Apache_Solr_Document instance, field names and boosts will automatically be prepended by "literal." and "boost."
+	 * as appropriate. Any keys from the $params array will NOT be treated this way. Any mappings from the document will overwrite key / value
+	 * pairs in the params array if they have the same name (e.g. you pass a "literal.id" key and value in your $params array but you also
+	 * pass in a document isntance with an "id" field" - the document's value(s) will take precedence).
+	 *
+	 * @param string $url URL
+	 * @param array $params optional array of key value pairs that will be sent with the post (see Solr Cell documentation)
+	 * @param Apache_Solr_Document $document optional document that will be used to generate post parameters (literal.* and boost.* params)
+	 * @param string $mimetype optional mimetype specification (for the file being extracted)
+	 *
+	 * @return Apache_Solr_Response
+	 *
+	 * @throws Apache_Solr_InvalidArgumentException if $url, $params, or $document are invalid.
+	 */
+	public function extractFromUrl($url, $params = array(), $document = null, $mimetype = 'application/octet-stream')
+	{
+		// check if $params is an array (allow null for default empty array)
+		if (!is_null($params))
+		{
+			if (!is_array($params))
+			{
+				throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
+			}
+		}
+		else
+		{
+			$params = array();
+		}
+
+		$httpTransport = $this->getHttpTransport();
+		
+		// read the contents of the URL using our configured Http Transport and default timeout
+		$httpResponse = $httpTransport->performGetRequest($url);
+		
+		// check that its a 200 response
+		if ($httpResponse->getStatusCode() == 200)
+		{
+			// add the resource.name parameter if not specified
+			if (!isset($params['resource.name']))
+			{
+				$params['resource.name'] = $url;
+			}
+
+			// delegate the rest to extractFromString
+			return $this->extractFromString($httpResponse->getBody(), $params, $document, $mimetype);
+		}
+		else
+		{
+			throw new Apache_Solr_InvalidArgumentException("URL '{$url}' returned non 200 response code");
+		}
 	}
 
 	/**

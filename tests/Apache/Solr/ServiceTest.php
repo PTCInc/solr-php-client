@@ -819,7 +819,7 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 	{
 		$extractFile = __FILE__;
 		
-		$expectedUrl = "http://localhost:8180/solr/update/extract?wt=json&json.nl=map&resource.name=ServiceTest.php";
+		$expectedUrl = "http://localhost:8180/solr/update/extract?resource.name=ServiceTest.php&wt=json&json.nl=map";
 		$expectedPostData = file_get_contents($extractFile);
 		$expectedContentType = 'application/octet-stream'; // default for extract
 		$expectedTimeout = false;
@@ -875,7 +875,7 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 	{
 		$extractFile = __FILE__;
 		
-		$expectedUrl = "http://localhost:8180/solr/update/extract?wt=json&json.nl=map&resource.name=ServiceTest.php";
+		$expectedUrl = "http://localhost:8180/solr/update/extract?resource.name=ServiceTest.php&wt=json&json.nl=map";
 		$expectedPostData = file_get_contents($extractFile);
 		$expectedContentType = 'application/octet-stream'; // default for extract
 		$expectedTimeout = false;
@@ -915,7 +915,7 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 	{
 		$extractFile = __FILE__;
 		
-		$expectedUrl = "http://localhost:8180/solr/update/extract?wt=json&json.nl=map&resource.name=ServiceTest.php&boost.field=2&literal.field=literal+value";
+		$expectedUrl = "http://localhost:8180/solr/update/extract?resource.name=ServiceTest.php&wt=json&json.nl=map&boost.field=2&literal.field=literal+value";
 		$expectedPostData = file_get_contents($extractFile);
 		$expectedContentType = 'application/octet-stream'; // default for extract
 		$expectedTimeout = false;
@@ -937,6 +937,94 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		$literals->setFieldBoost('field', 2);
 		
 		$fixture->extract($extractFile, null, $literals);
+	}
+	
+	public function testExtractWithUrlDefers()
+	{
+		$extractUrl = "http://example.com";
+		
+		$expectedUrl = "http://localhost:8180/solr/update/extract?resource.name=http%3A%2F%2Fexample.com&wt=json&json.nl=map";
+		$expectedPostData = Apache_Solr_HttpTransport_ResponseTest::BODY_200;
+		$expectedContentType = 'application/octet-stream'; // default for extract
+		$expectedTimeout = false;
+		
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+		
+		// setup expected call and response
+		$mockTransport->expects($this->once())
+			->method('performGetRequest')
+			->with(
+				$this->equalTo($extractUrl)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$mockTransport->expects($this->once())
+			->method('performPostRequest')
+			->with(
+				$this->equalTo($expectedUrl),
+				$this->equalTo($expectedPostData),
+				$this->equalTo($expectedContentType),
+				$this->equalTo($expectedTimeout)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$fixture = new Apache_Solr_Service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$fixture->extract($extractUrl);
+	}
+	
+	public function testExtractFromUrl()
+	{
+		$extractUrl = "http://example.com";
+		
+		$expectedUrl = "http://localhost:8180/solr/update/extract?resource.name=http%3A%2F%2Fexample.com&wt=json&json.nl=map";
+		$expectedPostData = Apache_Solr_HttpTransport_ResponseTest::BODY_200;
+		$expectedContentType = 'application/octet-stream'; // default for extract
+		$expectedTimeout = false;
+		
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+		
+		// setup expected call and response
+		$mockTransport->expects($this->once())
+			->method('performGetRequest')
+			->with(
+				$this->equalTo($extractUrl)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$mockTransport->expects($this->once())
+			->method('performPostRequest')
+			->with(
+				$this->equalTo($expectedUrl),
+				$this->equalTo($expectedPostData),
+				$this->equalTo($expectedContentType),
+				$this->equalTo($expectedTimeout)
+			)
+			->will($this->returnValue(Apache_Solr_HttpTransport_ResponseTest::get200Response()));
+		
+		$fixture = new Apache_Solr_Service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$fixture->extractFromUrl($extractUrl);
+	}
+	
+	/**
+	 * @expectedException Apache_Solr_InvalidArgumentException
+	 */
+	public function testExtractFromUrlWithInvalidParams()
+	{
+		$extractUrl = "http://example.com";
+		
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+			
+		$fixture = new Apache_Solr_Service();
+		$fixture->setHttpTransport($mockTransport);
+		
+		$fixture->extractFromUrl($extractUrl, "invalid");
 	}
 	
 	public function testOptimize()
