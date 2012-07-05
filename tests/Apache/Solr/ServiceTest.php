@@ -52,6 +52,7 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 			array(
 				'getDefaultTimeout',
 				'setDefaultTimeout',
+				'setAuthenticationCredentials',
 				'performGetRequest',
 				'performHeadRequest',
 				'performPostRequest',
@@ -307,6 +308,23 @@ class Apache_Solr_ServiceTest extends Apache_Solr_ServiceAbstractTest
 		
 		$fixture->setHttpTransport($mockTransport);		
 		$fixture->setDefaultTimeout($timeout);
+	}
+	
+	public function testSetAuthenticationCredentialsCallsThroughToTransport()
+	{
+		$username = "user";
+		$password = "password";
+		
+		$fixture = new Apache_Solr_Service();
+		
+		// set a mock transport
+		$mockTransport = $this->getMockHttpTransportInterface();
+		
+		// setup expected call
+		$mockTransport->expects($this->once())->method('setAuthenticationCredentials')->with($this->equalTo($username), $this->equalTo($password));
+		
+		$fixture->setHttpTransport($mockTransport);		
+		$fixture->setAuthenticationCredentials($username, $password);
 	}
 	
 	public function testPing()

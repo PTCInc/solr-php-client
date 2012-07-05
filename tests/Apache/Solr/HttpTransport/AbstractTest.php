@@ -100,7 +100,7 @@ abstract class Apache_Solr_HttpTransport_AbstractTest extends PHPUnit_Framework_
 		
 		$response = $fixture->performGetRequest(self::GET_URL);
 		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
+		$this->assertInstanceOf('Apache_Solr_HttpTransport_Response', $response);
 		
 		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
 		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
@@ -113,7 +113,7 @@ abstract class Apache_Solr_HttpTransport_AbstractTest extends PHPUnit_Framework_
 		$fixture = $this->getFixture();
 		$response = $fixture->performGetRequest(self::GET_URL, self::TIMEOUT);
 		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
+		$this->assertInstanceOf('Apache_Solr_HttpTransport_Response', $response);
 		
 		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
 		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
@@ -129,7 +129,7 @@ abstract class Apache_Solr_HttpTransport_AbstractTest extends PHPUnit_Framework_
 		$response = $fixture->performHeadRequest(self::GET_URL);
 		
 		// we should get everything the same as a get, except the body
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
+		$this->assertInstanceOf('Apache_Solr_HttpTransport_Response', $response);
 		
 		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
 		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
@@ -143,7 +143,7 @@ abstract class Apache_Solr_HttpTransport_AbstractTest extends PHPUnit_Framework_
 		$response = $fixture->performHeadRequest(self::GET_URL, self::TIMEOUT);
 		
 		// we should get everything the same as a get, except the body
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
+		$this->assertInstanceOf('Apache_Solr_HttpTransport_Response', $response);
 		
 		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
 		$this->assertEquals(self::GET_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
@@ -158,7 +158,7 @@ abstract class Apache_Solr_HttpTransport_AbstractTest extends PHPUnit_Framework_
 		
 		$response = $fixture->performPostRequest(self::POST_URL, self::POST_DATA, self::POST_REQUEST_CONTENT_TYPE);
 		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
+		$this->assertInstanceOf('Apache_Solr_HttpTransport_Response', $response);
 		
 		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
 		$this->assertEquals(self::POST_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
@@ -171,7 +171,7 @@ abstract class Apache_Solr_HttpTransport_AbstractTest extends PHPUnit_Framework_
 		$fixture = $this->getFixture();
 		$response = $fixture->performPostRequest(self::POST_URL, self::POST_DATA, self::POST_REQUEST_CONTENT_TYPE, self::TIMEOUT);
 		
-		$this->assertType('Apache_Solr_HttpTransport_Response', $response);
+		$this->assertInstanceOf('Apache_Solr_HttpTransport_Response', $response);
 		
 		$this->assertEquals(200, $response->getStatusCode(), 'Status code was not 200');
 		$this->assertEquals(self::POST_RESPONSE_MIME_TYPE, $response->getMimeType(), 'mimetype was not correct');
