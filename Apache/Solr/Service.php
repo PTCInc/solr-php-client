@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2012, Servigistics, Inc.
+ * Copyright (c) 2007-2012, Parametric Technology Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @copyright Copyright 2007-2012 Servigistics, Inc. (http://servigistics.com)
+ * @copyright Copyright 2007-2012 Parametric Technology Corporation (http://ptc.com)
  * @license http://solr-php-client.googlecode.com/svn/trunk/COPYING New BSD
  * @version $Id$
  *
  * @package Apache
  * @subpackage Solr
- * @author Donovan Jimenez <djimenez@conduit-it.com>
+ * @author Donovan Jimenez
  */
 
 // See Issue #1 (http://code.google.com/p/solr-php-client/issues/detail?id=1)
@@ -51,37 +51,31 @@ require_once(dirname(__FILE__) . '/HttpTransport/Interface.php');
  * Starting point for the Solr API. Represents a Solr server resource and has
  * methods for pinging, adding, deleting, committing, optimizing and searching.
  *
- * Example Usage:
+ * Example Usage (see also http://code.google.com/p/solr-php-client/wiki/ExampleUsage):
  * <code>
  * ...
  * $solr = new Apache_Solr_Service(); //or explicitly new Apache_Solr_Service('localhost', 8180, '/solr')
  *
- * if ($solr->ping())
- * {
- * 		$solr->deleteByQuery('*:*'); //deletes ALL documents - be careful :)
+ * $solr->deleteByQuery('*:*'); //deletes ALL documents - be careful :)
  *
- * 		$document = new Apache_Solr_Document();
- * 		$document->id = uniqid(); //or something else suitably unique
+ * $document = new Apache_Solr_Document();
+ * $document->id = uniqid(); //or something else suitably unique
  *
- * 		$document->title = 'Some Title';
- * 		$document->content = 'Some content for this wonderful document. Blah blah blah.';
+ * $document->title = 'Some Title';
+ * $document->content = 'Some content for this wonderful document. Blah blah blah.';
  *
- * 		$solr->addDocument($document); 	//if you're going to be adding documents in bulk using addDocuments
+ * $solr->addDocument($document); 	//if you're going to be adding documents in bulk using addDocuments
  * 										//with an array of documents is faster
  *
- * 		$solr->commit(); //commit to see the deletes and the document
- * 		$solr->optimize(); //merges multiple segments into one
+ * $solr->commit(); //commit to see the deletes and the document
+ * $solr->optimize(); //merges multiple segments into one
  *
- * 		//and the one we all care about, search!
- * 		//any other common or custom parameters to the request handler can go in the
- * 		//optional 4th array argument.
- * 		$solr->search('content:blah', 0, 10, array('sort' => 'timestamp desc'));
- * }
+ * //and the one we all care about, search!
+ * //any other common or custom parameters to the request handler can go in the
+ * //optional 4th array argument.
+ * $solr->search('content:blah', 0, 10, array('sort' => 'timestamp desc'));
  * ...
  * </code>
- *
- * @todo Investigate using other HTTP clients other than file_get_contents built-in handler. Could provide performance
- * improvements when dealing with multiple requests by using HTTP's keep alive functionality
  */
 class Apache_Solr_Service
 {
@@ -94,6 +88,11 @@ class Apache_Solr_Service
 	 * SVN ID meta data for this class
 	 */
 	const SVN_ID = '$Id$';
+
+	/**
+	 * SVN HeadURL meta data for this class
+	 */
+	const SVN_URL = '$HeadURL$';
 
 	/**
 	 * Response writer we'll request - JSON. See http://code.google.com/p/solr-php-client/issues/detail?id=6#c1 for reasoning
