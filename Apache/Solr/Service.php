@@ -125,7 +125,7 @@ class Apache_Solr_Service
 	 *
 	 * @var string
 	 */
-	protected $_host, $_port, $_path;
+	protected $_protocol, $_host, $_port, $_path;
 
 	/**
 	 * Whether {@link Apache_Solr_Response} objects should create {@link Apache_Solr_Document}s in
@@ -230,12 +230,14 @@ class Apache_Solr_Service
 	 * @param string $port
 	 * @param string $path
 	 * @param Apache_Solr_HttpTransport_Interface $httpTransport
+	 * @param string $protocol
 	 */
-	public function __construct($host = 'localhost', $port = 8180, $path = '/solr/', $httpTransport = false)
+	public function __construct($host = 'localhost', $port = 8180, $path = '/solr/', $httpTransport = false, $protocol = 'http')
 	{
 		$this->setHost($host);
 		$this->setPort($port);
 		$this->setPath($path);
+		$this->setProtocol($protocol);
 
 		$this->_initUrls();
 
@@ -273,7 +275,7 @@ class Apache_Solr_Service
 			$queryString = '';
 		}
 
-		return 'http://' . $this->_host . ':' . $this->_port . $this->_path . $servlet . $queryString;
+		return $this->_protocol . '://' . $this->_host . ':' . $this->_port . $this->_path . $servlet . $queryString;
 	}
 
 	/**
@@ -466,6 +468,38 @@ class Apache_Solr_Service
 		{
 			$this->_path = '/';
 		}
+
+		if ($this->_urlsInited)
+		{
+			$this->_initUrls();
+		}
+	}
+
+	/**
+	 * Get the current protocol.
+	 *
+	 * @return string
+	 */
+	public function getProtocol()
+	{
+		return $this->_protocol;
+	}
+
+	/**
+	 * Set the protocol used. If empty will fallback to 'http'.
+	 *
+	 * @param string $path
+	 */
+	public function setProtocol($protocol)
+	{
+    if (empty($protocol))
+    {
+      $this->_protocol = 'http';
+    }
+    else
+    {
+  		$this->_protocol = $protocol;
+    }
 
 		if ($this->_urlsInited)
 		{
