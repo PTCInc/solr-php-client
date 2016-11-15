@@ -1,0 +1,17 @@
+{
+	"name": "ptcinc/solr-php-client",
+	"description": "A purely PHP library for indexing and searching documents against an Apache Solr installation",
+	"keywords": ["php", "solr", "client"],
+	"license": "BSD-3-Clause",
+	"authors": [
+		{
+			"name": "Donovan Jimenez",
+			"homepage": "https://github.com/djimenez"
+		}
+	],
+	"autoload": {
+		"psr-0": {
+			"Apache_Solr_": ""
+		}
+	}
+}
