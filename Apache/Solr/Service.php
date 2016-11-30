@@ -119,6 +119,7 @@ class Apache_Solr_Service
 	const SYSTEM_SERVLET = 'admin/system';
 	const THREADS_SERVLET = 'admin/threads';
 	const EXTRACT_SERVLET = 'update/extract';
+	const SUGGEST_SERVLET = 'suggest';
 
 	/**
 	 * Server identification strings
@@ -164,7 +165,7 @@ class Apache_Solr_Service
 	 *
 	 * @var string
 	 */
-	protected $_pingUrl, $_updateUrl, $_searchUrl, $_systemUrl, $_threadsUrl;
+	protected $_pingUrl, $_updateUrl, $_searchUrl, $_systemUrl, $_threadsUrl, $_suggestUrl;
 
 	/**
 	 * Keep track of whether our URLs have been constructed
@@ -290,6 +291,7 @@ class Apache_Solr_Service
 		$this->_systemUrl = $this->_constructUrl(self::SYSTEM_SERVLET, array('wt' => self::SOLR_WRITER));
 		$this->_threadsUrl = $this->_constructUrl(self::THREADS_SERVLET, array('wt' => self::SOLR_WRITER ));
 		$this->_updateUrl = $this->_constructUrl(self::UPDATE_SERVLET, array('wt' => self::SOLR_WRITER ));
+		$this->_suggestUrl = $this->_constructUrl(self::SUGGEST_SERVLET);
 
 		$this->_urlsInited = true;
 	}
@@ -1236,6 +1238,55 @@ class Apache_Solr_Service
 		else if ($method == self::METHOD_POST)
 		{
 			return $this->_sendRawPost($this->_searchUrl, $queryString, FALSE, 'application/x-www-form-urlencoded; charset=UTF-8');
+		}
+		else
+		{
+			throw new Apache_Solr_InvalidArgumentException("Unsupported method '$method', please use the Apache_Solr_Service::METHOD_* constants");
+		}
+	}
+
+	/**
+	 * Simple Suggest interface
+	 *
+	 * @param string $query The raw query string
+	 * @param array $params key / value pairs for other query parameters (see Solr documentation), use arrays for parameter keys used more than once (e.g. facet.field)
+	 * @param string $method The HTTP method (Apache_Solr_Service::METHOD_GET or Apache_Solr_Service::METHOD::POST)
+	 * @return Apache_Solr_Response
+	 *
+	 * @throws Apache_Solr_HttpTransportException If an error occurs during the service call
+	 * @throws Apache_Solr_InvalidArgumentException If an invalid HTTP method is used
+	 */
+	public function suggest($query, $params = array(), $method = self::METHOD_GET)
+	{
+		// ensure params is an array
+		if (!is_null($params))
+		{
+			if (!is_array($params))
+			{
+				// params was specified but was not an array - invalid
+				throw new Apache_Solr_InvalidArgumentException("\$params must be a valid array or null");
+			}
+		}
+		else
+		{
+			$params = array();
+		}
+		
+		// construct our full parameters
+
+		// common parameters in this interface
+		$params['wt'] = self::SOLR_WRITER;
+		$params['q'] = $query;
+
+		$queryString = $this->_generateQueryString($params);
+
+		if ($method == self::METHOD_GET)
+		{
+			return $this->_sendRawGet($this->_suggestUrl . $this->_queryDelimiter . $queryString);
+		}
+		else if ($method == self::METHOD_POST)
+		{
+			return $this->_sendRawPost($this->_suggestUrl, $queryString, FALSE, 'application/x-www-form-urlencoded; charset=UTF-8');
 		}
 		else
 		{
