@@ -298,6 +298,7 @@ class Apache_Solr_Document implements IteratorAggregate
 	 * }
 	 * </code>
 	 */
+	#[\ReturnTypeWillChange]
 	public function getIterator()
 	{
 		$arrayObject = new ArrayObject($this->_fields);
