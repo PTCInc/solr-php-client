@@ -8,7 +8,7 @@ This project was formerly maintained at [http://code.google.com/p/solr-php-clien
 
 Try starting with the [FAQ](https://github.com/PTCInc/solr-php-client/wiki/FAQ) and [Example Usage](https://github.com/PTCInc/solr-php-client/wiki/Example-Usage).
 
-Also, feel free to search and ask questions on the google mailing list: [php-solr-client@googlegroups.com](mailto:php-solr-client@googlegroups.com) / [Group Page](https://groups.google.com/forum/?fromgroups#!forum/php-solr-client)
+Also, feel free to search and ask questions on the google mailing list: [php-solr-client@googlegroups.com](mailto:php-solr-client@googlegroups.com) / [Group Page](https://groups.google.com/forum/?fromgroups#!forum/php-solr-client).
 
 ## License
 
